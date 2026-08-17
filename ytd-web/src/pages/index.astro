@@ -1,0 +1,281 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Downloader from '../components/Downloader.astro';
+import AdPlaceholder from '../components/AdPlaceholder.astro';
+---
+
+<Layout
+  title="YTD Local — Free Local YouTube Video Downloader"
+  description="Download YouTube videos and audio directly to your device with 1080p HD support. Zero server proxying, completely private local companion downloader."
+>
+  <div class="homepage-wrapper">
+    <!-- Hero & Downloader (Above the fold) -->
+    <section class="downloader-section">
+      <Downloader />
+    </section>
+
+    <!-- Top Advertisement Placeholder -->
+    <AdPlaceholder slotLocation="top-banner" />
+
+    <!-- How It Works Section -->
+    <section class="content-section">
+      <h2 class="section-heading">How YTD Local Works</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3 class="step-title">Paste Video URL</h3>
+          <p class="step-desc">Copy any YouTube link and paste it into the downloader field above.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3 class="step-title">Analyze Formats</h3>
+          <p class="step-desc">Click analyze to parse available qualities (1080p, 720p, 480p, MP3).</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3 class="step-title">Select Quality</h3>
+          <p class="step-desc">Choose your preferred video resolution or audio-only output.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <h3 class="step-title">Direct Local Download</h3>
+          <p class="step-desc">The local companion performs the download directly to your Downloads folder.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="content-section light-bg">
+      <h2 class="section-heading">Why Choose YTD Local?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3 class="feature-title">100% Private & Local</h3>
+          <p class="feature-desc">
+            The website never touches your video stream. All media processing happens strictly on your machine.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Maximum Download Speed</h3>
+          <p class="feature-desc">
+            Utilizes mature yt-dlp and FFmpeg engines for direct multi-threaded downloads without cloud throttles.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎬</div>
+          <h3 class="feature-title">Full HD & Audio Support</h3>
+          <p class="feature-desc">
+            Extract up to 1080p video with pristine audio merging or convert directly to high bitrate MP3.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mid Content Advertisement Placeholder -->
+    <AdPlaceholder slotLocation="mid-banner" />
+
+    <!-- FAQ Section -->
+    <section class="content-section">
+      <h2 class="section-heading">Frequently Asked Questions</h2>
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary class="faq-question">How does YTD Local work?</summary>
+          <div class="faq-answer">
+            YTD Local uses a tiny local companion helper process running on <code>127.0.0.1:47821</code>. When you click Download on this website, your browser sends a request to your local helper, which runs yt-dlp to download the video directly to your computer.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Where is the downloaded file saved?</summary>
+          <div class="faq-answer">
+            Files are saved directly in your operating system's standard Downloads directory under <code>Downloads/YTD Local/</code>.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Does the website upload or store my video?</summary>
+          <div class="faq-answer">
+            No. The website is purely a user interface. The video content passes directly from YouTube to your local helper without ever routed through our website servers.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Why do I need the local helper?</summary>
+          <div class="faq-answer">
+            Browser security restrictions prevent web pages from saving arbitrary files directly to disk without prompts or extracting high-resolution video streams. The local helper bypasses these limitations efficiently and privately.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Does YTD Local work on macOS and Windows?</summary>
+          <div class="faq-answer">
+            Yes! The Go companion agent is cross-platform and runs seamlessly on macOS, Windows, and Linux.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Legal & Responsible Use Notice -->
+    <section class="legal-notice-box">
+      <p>
+        <strong>Legal & Responsible Use Notice:</strong> YTD Local is designed for personal archiving and educational purposes. Users are expected to respect copyright law and only download media they own or have explicit permission from the copyright holder to download.
+      </p>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .homepage-wrapper {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .downloader-section {
+    padding: 32px 0 16px;
+  }
+
+  .content-section {
+    margin: 64px 0;
+  }
+
+  .content-section.light-bg {
+    background-color: var(--color-surface-soft);
+    padding: 48px 32px;
+    border-radius: var(--rounded-lg);
+    border: 1px solid var(--color-hairline-soft);
+  }
+
+  .section-heading {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-ink);
+    text-align: center;
+    margin-bottom: 40px;
+    letter-spacing: -0.4px;
+  }
+
+  /* Steps Grid */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+  }
+
+  .step-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-md);
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .step-number {
+    width: 36px;
+    height: 36px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 8px;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.5;
+  }
+
+  /* Features Grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+  }
+
+  .feature-card {
+    background-color: var(--color-canvas);
+    padding: 32px;
+    border-radius: var(--rounded-md);
+    border: 1px solid var(--color-hairline);
+    box-shadow: var(--shadow-card);
+  }
+
+  .feature-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .feature-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 10px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.5;
+  }
+
+  /* FAQ List */
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 840px;
+    margin: 0 auto;
+  }
+
+  .faq-item {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-md);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+  }
+
+  .faq-question {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-ink);
+    outline: none;
+  }
+
+  .faq-answer {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.6;
+  }
+
+  /* Legal Notice Box */
+  .legal-notice-box {
+    margin-top: 48px;
+    padding: 20px 24px;
+    background-color: var(--color-surface-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-sm);
+    font-size: 13px;
+    color: var(--color-muted);
+    line-height: 1.6;
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,98 @@
+---
+interface Props {
+  id?: string;
+  title?: string;
+  thumbnail?: string;
+  uploader?: string;
+  duration?: number;
+}
+
+const {
+  id = "",
+  title = "",
+  thumbnail = "",
+  uploader = "",
+  duration = 0
+} = Astro.props;
+
+const mins = Math.floor(duration / 60);
+const secs = Math.floor(duration % 60);
+const formattedDuration = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+---
+
+<div class="video-info-card">
+  <div class="thumbnail-wrapper">
+    <img src={thumbnail || "https://via.placeholder.com/320x180"} alt={title} class="thumbnail-img" />
+    <div class="duration-badge">{formattedDuration}</div>
+  </div>
+
+  <div class="video-details">
+    <h3 class="video-title">{title}</h3>
+    <p class="uploader-name">Channel: <strong>{uploader}</strong></p>
+  </div>
+</div>
+
+<style>
+  .video-info-card {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    padding: 20px;
+    background-color: var(--color-surface-soft);
+    border-radius: var(--rounded-md);
+    border: 1px solid var(--color-hairline);
+  }
+
+  @media (max-width: 640px) {
+    .video-info-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  .thumbnail-wrapper {
+    position: relative;
+    width: 240px;
+    min-width: 240px;
+    border-radius: var(--rounded-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .thumbnail-img {
+    width: 100%;
+    height: 135px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .duration-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background-color: rgba(34, 34, 34, 0.85);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .video-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .video-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-ink);
+    line-height: 1.3;
+  }
+
+  .uploader-name {
+    font-size: 14px;
+    color: var(--color-muted);
+  }
+</style>

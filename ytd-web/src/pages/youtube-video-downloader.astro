@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Downloader from '../components/Downloader.astro';
+import AdPlaceholder from '../components/AdPlaceholder.astro';
+---
+
+<Layout
+  title="Download YouTube Videos HD 1080p, 720p — YTD Local"
+  description="High-definition YouTube video downloader. Download 1080p, 720p, and 480p videos directly to your device with fast local companion processing."
+>
+  <div class="page-wrapper">
+    <section class="downloader-section">
+      <Downloader />
+    </section>
+
+    <AdPlaceholder slotLocation="seo-top" />
+
+    <article class="seo-article">
+      <h1>YouTube Video Downloader HD (1080p & 720p)</h1>
+      <p>
+        YTD Local allows you to download videos from YouTube in full high-definition resolution directly onto your computer or mobile device. By utilizing your machine's local processing capability via <code>yt-dlp</code> and <code>FFmpeg</code>, YTD Local bypasses slow third-party servers and cloud queues.
+      </p>
+
+      <h2>Key Benefits of HD Video Downloads</h2>
+      <ul>
+        <li><strong>1080p Full HD & 60fps Support:</strong> Experience pristine video quality with high frame rate support.</li>
+        <li><strong>Original Audio Quality:</strong> Merges video and audio streams seamlessly using local FFmpeg processing.</li>
+        <li><strong>Private & Secure:</strong> No tracking cookies, no server logs, and zero middleman cloud storage.</li>
+      </ul>
+
+      <h2>Supported Video Formats & Quality Levels</h2>
+      <p>
+        Depending on the original upload quality, YTD Local supports extracting video in 1080p, 720p, 480p, 360p, as well as standalone MP3 audio format.
+      </p>
+
+      <AdPlaceholder slotLocation="seo-mid" />
+
+      <h2>How to Download HD Videos Locally</h2>
+      <ol>
+        <li>Copy the link of the video you wish to download.</li>
+        <li>Paste the URL into the YTD Local search box above and click <strong>Analyze</strong>.</li>
+        <li>Select 1080p or your preferred quality.</li>
+        <li>Click <strong>Download</strong> to start local processing directly to your Downloads folder.</li>
+      </ol>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .page-wrapper {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .seo-article {
+    max-width: 800px;
+    margin: 48px auto;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--color-body);
+  }
+
+  .seo-article h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 16px;
+  }
+
+  .seo-article h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+
+  .seo-article p {
+    margin-bottom: 16px;
+  }
+
+  .seo-article ul, .seo-article ol {
+    margin-bottom: 24px;
+    padding-left: 24px;
+  }
+
+  .seo-article li {
+    margin-bottom: 8px;
+  }
+</style>

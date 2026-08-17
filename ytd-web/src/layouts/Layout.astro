@@ -1,0 +1,290 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  canonicalUrl?: string;
+  ogImage?: string;
+}
+
+const {
+  title = "YTD Local — Free Local YouTube Video Downloader & Converter",
+  description = "Fast, free, and private YouTube video downloader. Download 1080p, 720p, 480p, and MP3 audio directly to your device with zero server tracking.",
+  canonicalUrl = Astro.url.href,
+  ogImage = "https://ytdlocal.com/og-image.png"
+} = Astro.props;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "YTD Local",
+  "operatingSystem": "macOS, Windows, Linux",
+  "applicationCategory": "MultimediaApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "description": description
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalUrl} />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonicalUrl} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImage} />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content={canonicalUrl} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="top-nav">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <svg viewBox="0 0 32 32" class="brand-icon">
+          <path d="M16 1C7.716 1 1 7.716 1 16c0 8.284 6.716 15 15 15 8.284 0 15-6.716 15-15C31 7.716 24.284 1 16 1zm-3.5 21.5v-13l10 6.5-10 6.5z"/>
+        </svg>
+        <span class="brand-name">YTD Local</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/youtube-video-downloader" class="nav-link">Video Downloader</a>
+        <a href="/youtube-mp3" class="nav-link">MP3 Downloader</a>
+        <a href="/youtube-mp4" class="nav-link">MP4 Converter</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Page Main Content -->
+  <main class="page-content">
+    <slot />
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer-light">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4 class="footer-title">YTD Local</h4>
+          <p class="footer-text">
+            Minimal local companion & website for high quality video downloads directly on your device.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-title">Tools</h4>
+          <ul class="footer-links">
+            <li><a href="/youtube-video-downloader">YouTube Video Downloader</a></li>
+            <li><a href="/youtube-mp3">YouTube to MP3 Converter</a></li>
+            <li><a href="/youtube-mp4">YouTube to MP4 Downloader</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-title">Legal & Usage</h4>
+          <p class="footer-legal">
+            YTD Local is intended for personal backup and educational use. Users are responsible for complying with content owners' permissions and applicable copyright laws.
+          </p>
+        </div>
+      </div>
+
+      <div class="legal-band">
+        <span>© {new Date().getFullYear()} YTD Local • Fast Local Companion Engine</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+
+<style is:global>
+  /* Airbnb Design Tokens */
+  :root {
+    --color-primary: #ff385c;
+    --color-primary-active: #e00b41;
+    --color-primary-disabled: #ffd1da;
+    --color-ink: #222222;
+    --color-body: #3f3f3f;
+    --color-muted: #6a6a6a;
+    --color-hairline: #dddddd;
+    --color-hairline-soft: #ebebeb;
+    --color-canvas: #ffffff;
+    --color-surface-soft: #f7f7f7;
+    --color-surface-strong: #f2f2f2;
+    --color-on-primary: #ffffff;
+
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    --rounded-sm: 8px;
+    --rounded-md: 14px;
+    --rounded-lg: 20px;
+    --rounded-full: 9999px;
+
+    --shadow-card: rgba(0, 0, 0, 0.02) 0 0 0 1px, rgba(0, 0, 0, 0.04) 0 2px 6px 0, rgba(0, 0, 0, 0.1) 0 4px 8px 0;
+    --shadow-hover: rgba(0, 0, 0, 0.04) 0 0 0 1px, rgba(0, 0, 0, 0.08) 0 4px 12px 0, rgba(0, 0, 0, 0.15) 0 8px 16px 0;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-family);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Header Navigation */
+  .top-nav {
+    height: 80px;
+    background-color: var(--color-canvas);
+    border-bottom: 1px solid var(--color-hairline);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-container {
+    max-width: 1140px;
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+    fill: var(--color-primary);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 28px;
+  }
+
+  .nav-link {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-muted);
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--color-ink);
+  }
+
+  .page-content {
+    min-height: calc(100vh - 300px);
+  }
+
+  /* Footer */
+  .footer-light {
+    border-top: 1px solid var(--color-hairline);
+    padding: 64px 24px 32px;
+    background-color: var(--color-canvas);
+    margin-top: 64px;
+  }
+
+  .footer-container {
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr;
+    gap: 48px;
+    margin-bottom: 48px;
+  }
+
+  @media (max-width: 768px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .nav-links {
+      display: none;
+    }
+  }
+
+  .footer-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 16px;
+  }
+
+  .footer-text, .footer-legal {
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.6;
+  }
+
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .footer-links a {
+    font-size: 14px;
+    color: var(--color-muted);
+    transition: color 0.2s ease;
+  }
+
+  .footer-links a:hover {
+    color: var(--color-ink);
+  }
+
+  .legal-band {
+    border-top: 1px solid var(--color-hairline-soft);
+    padding-top: 24px;
+    font-size: 13px;
+    color: var(--color-muted);
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,145 @@
+---
+---
+
+<div id="progress-container" class="download-progress-card hidden">
+  <div class="progress-header">
+    <div class="status-title-group">
+      <span id="job-status-pill" class="status-pill downloading">Downloading</span>
+      <span id="job-quality-tag" class="quality-tag">1080p</span>
+    </div>
+    <button type="button" id="btn-cancel-job" class="btn-cancel">Cancel</button>
+  </div>
+
+  <div class="progress-track">
+    <div id="progress-bar-fill" class="progress-fill" style="width: 0%;"></div>
+  </div>
+
+  <div class="progress-info-row">
+    <span id="progress-pct-text" class="progress-pct">0%</span>
+    <span id="progress-metrics-text" class="progress-metrics">Connecting to local helper...</span>
+  </div>
+
+  <div id="completed-banner" class="completed-message hidden">
+    ✓ Download complete. Saved directly to your Downloads folder.
+  </div>
+</div>
+
+<style>
+  .download-progress-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-md);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-pill {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--rounded-full);
+    text-transform: capitalize;
+  }
+
+  .status-pill.downloading {
+    background-color: #e6f4ff;
+    color: #0958d9;
+  }
+
+  .status-pill.processing {
+    background-color: #fff7e6;
+    color: #d46b08;
+  }
+
+  .status-pill.completed {
+    background-color: #f6ffed;
+    color: #389e0d;
+  }
+
+  .status-pill.failed, .status-pill.cancelled {
+    background-color: #fff1f0;
+    color: #cf1322;
+  }
+
+  .quality-tag {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-ink);
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--rounded-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cancel:hover {
+    border-color: #cf1322;
+    color: #cf1322;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 10px;
+    background-color: var(--color-surface-strong);
+    border-radius: var(--rounded-full);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background-color: var(--color-primary);
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  .progress-info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--color-muted);
+  }
+
+  .progress-pct {
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .completed-message {
+    padding: 12px 16px;
+    background-color: #f6ffed;
+    border: 1px solid #b7eb8f;
+    color: #389e0d;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--rounded-sm);
+    text-align: center;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+</style>

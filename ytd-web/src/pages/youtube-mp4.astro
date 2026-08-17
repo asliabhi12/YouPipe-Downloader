@@ -1,0 +1,84 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Downloader from '../components/Downloader.astro';
+import AdPlaceholder from '../components/AdPlaceholder.astro';
+---
+
+<Layout
+  title="Download YouTube to MP4 Video — YTD Local"
+  description="Convert and download YouTube videos to MP4 format locally on your machine. Compatible with all video players, tablets, and smart TVs."
+>
+  <div class="page-wrapper">
+    <section class="downloader-section">
+      <Downloader />
+    </section>
+
+    <AdPlaceholder slotLocation="seo-top" />
+
+    <article class="seo-article">
+      <h1>YouTube to MP4 Local Converter</h1>
+      <p>
+        MP4 is the standard video container supported across all major operating systems, video players, and smart TVs. YTD Local allows you to convert and download YouTube videos into clean MP4 files directly onto your machine.
+      </p>
+
+      <h2>Universal Compatibility</h2>
+      <p>
+        Downloaded MP4 files play smoothly on macOS QuickTime, Windows Media Player, VLC, iOS, Android, and video editing software like Premiere Pro or Final Cut Pro.
+      </p>
+
+      <AdPlaceholder slotLocation="seo-mid" />
+
+      <h2>How to Download MP4 Videos</h2>
+      <ol>
+        <li>Paste the YouTube video link above.</li>
+        <li>Click <strong>Analyze</strong> to inspect video format streams.</li>
+        <li>Select <strong>1080p</strong> or <strong>720p</strong> MP4 resolution.</li>
+        <li>Click <strong>Download</strong> to initiate direct local engine processing.</li>
+      </ol>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .page-wrapper {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .seo-article {
+    max-width: 800px;
+    margin: 48px auto;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--color-body);
+  }
+
+  .seo-article h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 16px;
+  }
+
+  .seo-article h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+
+  .seo-article p {
+    margin-bottom: 16px;
+  }
+
+  .seo-article ul, .seo-article ol {
+    margin-bottom: 24px;
+    padding-left: 24px;
+  }
+
+  .seo-article li {
+    margin-bottom: 8px;
+  }
+</style>

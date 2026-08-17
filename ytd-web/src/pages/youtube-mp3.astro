@@ -1,0 +1,86 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Downloader from '../components/Downloader.astro';
+import AdPlaceholder from '../components/AdPlaceholder.astro';
+---
+
+<Layout
+  title="Convert YouTube to MP3 Audio — YTD Local"
+  description="Extract pristine MP3 audio from any YouTube video locally on your computer. Fast, lossless audio extraction with zero server upload."
+>
+  <div class="page-wrapper">
+    <section class="downloader-section">
+      <Downloader />
+    </section>
+
+    <AdPlaceholder slotLocation="seo-top" />
+
+    <article class="seo-article">
+      <h1>YouTube to MP3 Converter & Audio Extractor</h1>
+      <p>
+        YTD Local makes it effortless to convert YouTube videos into high-quality audio files. Whether you are archiving podcasts, music tracks, or lectures, the audio is extracted directly using your machine's native engine.
+      </p>
+
+      <h2>Why Use Local MP3 Conversion?</h2>
+      <ul>
+        <li><strong>Lossless Audio Extraction:</strong> Direct stream copy prevents compression degradation.</li>
+        <li><strong>Unlimited File Length:</strong> Convert long podcasts, DJ mixes, and lectures without 20-minute limits.</li>
+        <li><strong>Instant Saved File:</strong> Extracted MP3s are stored straight in your device's <code>Downloads/YTD Local/</code> directory.</li>
+      </ul>
+
+      <AdPlaceholder slotLocation="seo-mid" />
+
+      <h2>Steps to Convert YouTube to MP3</h2>
+      <ol>
+        <li>Paste the YouTube video link into the URL field above.</li>
+        <li>Click <strong>Analyze</strong> to load format details.</li>
+        <li>Choose the <strong>Audio (MP3)</strong> option.</li>
+        <li>Click <strong>Download</strong> to begin instant local audio conversion.</li>
+      </ol>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .page-wrapper {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .seo-article {
+    max-width: 800px;
+    margin: 48px auto;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--color-body);
+  }
+
+  .seo-article h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 16px;
+  }
+
+  .seo-article h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+
+  .seo-article p {
+    margin-bottom: 16px;
+  }
+
+  .seo-article ul, .seo-article ol {
+    margin-bottom: 24px;
+    padding-left: 24px;
+  }
+
+  .seo-article li {
+    margin-bottom: 8px;
+  }
+</style>

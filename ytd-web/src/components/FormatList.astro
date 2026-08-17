@@ -1,0 +1,97 @@
+---
+interface FormatItem {
+  quality: string;
+  label?: string;
+}
+
+interface Props {
+  formats?: FormatItem[];
+}
+
+const { formats = [
+  { quality: '1080p', label: '1080p Full HD' },
+  { quality: '720p', label: '720p HD' },
+  { quality: '480p', label: '480p SD' },
+  { quality: '360p', label: '360p Low' },
+  { quality: 'audio', label: 'Audio Only (MP3)' }
+] } = Astro.props;
+---
+
+<div class="format-list-container">
+  <h4 class="format-title">Available Download Formats</h4>
+  <div class="format-rows">
+    {formats.map((f) => (
+      <div class="format-row">
+        <span class="format-name">{f.label || f.quality}</span>
+        <button type="button" class="btn-download-format" data-quality={f.quality}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download
+        </button>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .format-list-container {
+    margin-top: 24px;
+  }
+
+  .format-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 12px;
+  }
+
+  .format-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .format-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-sm);
+    transition: border-color 0.2s ease;
+  }
+
+  .format-row:hover {
+    border-color: var(--color-ink);
+  }
+
+  .format-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .btn-download-format {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--rounded-sm);
+    padding: 8px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-download-format:hover {
+    background-color: var(--color-primary-active);
+  }
+</style>

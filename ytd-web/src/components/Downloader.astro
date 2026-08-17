@@ -1,0 +1,349 @@
+---
+import AgentStatus from './AgentStatus.astro';
+import VideoInfo from './VideoInfo.astro';
+import FormatList from './FormatList.astro';
+import DownloadProgress from './DownloadProgress.astro';
+---
+
+<div class="downloader-island">
+  <div class="downloader-hero">
+    <h2 class="hero-brand">YTD Local</h2>
+    <p class="hero-tagline">Download videos directly to your device.</p>
+  </div>
+
+  <!-- Search Input Bar -->
+  <form id="downloader-url-form" class="search-bar-pill">
+    <div class="search-field">
+      <label for="url-input" class="search-label">Paste video URL</label>
+      <input
+        type="url"
+        id="url-input"
+        class="search-input"
+        placeholder="https://www.youtube.com/watch?v=..."
+        required
+        autocomplete="off"
+      />
+    </div>
+    <button type="submit" id="btn-analyze" class="search-orb" title="Analyze Video">
+      <span class="btn-text">Analyze</span>
+    </button>
+  </form>
+
+  <!-- Agent Status Indicator -->
+  <div class="status-wrapper">
+    <AgentStatus />
+  </div>
+
+  <!-- Error Message Container -->
+  <div id="downloader-error" class="error-banner hidden"></div>
+
+  <!-- Analysis Results Section -->
+  <div id="analysis-results" class="analysis-container hidden">
+    <VideoInfo />
+    <FormatList />
+  </div>
+
+  <!-- Download Progress Section -->
+  <DownloadProgress />
+</div>
+
+<script>
+  import { getMetadata, createDownload, getDownload, cancelDownload } from '../lib/agent';
+
+  let currentUrl = '';
+  let activeJobId = '';
+  let pollInterval: any = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('downloader-url-form');
+    const input = document.getElementById('url-input') as HTMLInputElement;
+    const btnAnalyze = document.getElementById('btn-analyze');
+    const errorBanner = document.getElementById('downloader-error');
+    const analysisContainer = document.getElementById('analysis-results');
+    const progressContainer = document.getElementById('progress-container');
+
+    const statusPill = document.getElementById('job-status-pill');
+    const qualityTag = document.getElementById('job-quality-tag');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const progressPctText = document.getElementById('progress-pct-text');
+    const progressMetricsText = document.getElementById('progress-metrics-text');
+    const completedBanner = document.getElementById('completed-banner');
+    const btnCancel = document.getElementById('btn-cancel-job');
+
+    if (!form || !input || !btnAnalyze || !errorBanner || !analysisContainer || !progressContainer) return;
+
+    function showError(msg: string) {
+      errorBanner.textContent = msg;
+      errorBanner.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorBanner.classList.add('hidden');
+    }
+
+    // Form submission: Analyze
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      currentUrl = input.value.trim();
+      if (!currentUrl) return;
+
+      btnAnalyze.setAttribute('disabled', 'true');
+      btnAnalyze.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const meta = await getMetadata(currentUrl);
+        renderMetadata(meta);
+      } catch (err: any) {
+        showError(err.message || 'Failed to analyze URL. Make sure the local companion agent is running.');
+      } finally {
+        btnAnalyze.removeAttribute('disabled');
+        btnAnalyze.innerHTML = '<span class="btn-text">Analyze</span>';
+      }
+    });
+
+    function renderMetadata(meta: any) {
+      analysisContainer.classList.remove('hidden');
+      
+      const thumb = analysisContainer.querySelector('.thumbnail-img') as HTMLImageElement;
+      const title = analysisContainer.querySelector('.video-title');
+      const uploader = analysisContainer.querySelector('.uploader-name strong');
+      const duration = analysisContainer.querySelector('.duration-badge');
+
+      if (thumb) thumb.src = meta.thumbnail || 'https://via.placeholder.com/320x180';
+      if (title) title.textContent = meta.title || 'Untitled Video';
+      if (uploader) uploader.textContent = meta.uploader || 'Unknown Channel';
+
+      if (duration) {
+        const mins = Math.floor((meta.duration || 0) / 60);
+        const secs = Math.floor((meta.duration || 0) % 60);
+        duration.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+
+      // Bind format download buttons
+      const formatButtons = analysisContainer.querySelectorAll('.btn-download-format');
+      formatButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const quality = btn.getAttribute('data-quality') || '1080p';
+          startJob(currentUrl, quality);
+        });
+      });
+
+      analysisContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function startJob(url: string, quality: string) {
+      hideError();
+      try {
+        const { job_id } = await createDownload(url, quality);
+        activeJobId = job_id;
+
+        if (qualityTag) qualityTag.textContent = quality;
+        progressContainer.classList.remove('hidden');
+        if (completedBanner) completedBanner.classList.add('hidden');
+        if (btnCancel) btnCancel.classList.remove('hidden');
+
+        startPolling(job_id);
+      } catch (err: any) {
+        showError(err.message || 'Failed to start download job.');
+      }
+    }
+
+    function startPolling(jobId: string) {
+      if (pollInterval) clearInterval(pollInterval);
+
+      pollInterval = setInterval(async () => {
+        try {
+          const job = await getDownload(jobId);
+          updateProgressUI(job);
+
+          if (['completed', 'failed', 'cancelled'].includes(job.status)) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
+        }
+      }, 750);
+    }
+
+    function updateProgressUI(job: any) {
+      if (!statusPill || !progressBarFill || !progressPctText || !progressMetricsText) return;
+
+      statusPill.className = `status-pill ${job.status}`;
+      statusPill.textContent = job.status;
+
+      const pct = (job.progress || 0).toFixed(0);
+      progressBarFill.style.width = `${pct}%`;
+      progressPctText.textContent = `${pct}%`;
+
+      if (job.status === 'downloading') {
+        const speedMB = (job.speed / (1024 * 1024)).toFixed(1);
+        progressMetricsText.textContent = `${speedMB} MB/s • ${job.eta} seconds remaining`;
+      } else if (job.status === 'processing') {
+        progressMetricsText.textContent = 'Merging video & audio with FFmpeg...';
+      } else if (job.status === 'completed') {
+        progressMetricsText.textContent = 'Finished!';
+        progressBarFill.style.backgroundColor = '#389e0d';
+        if (completedBanner) completedBanner.classList.remove('hidden');
+        if (btnCancel) btnCancel.classList.add('hidden');
+      } else if (job.status === 'failed') {
+        progressMetricsText.textContent = job.error || 'Download failed';
+        progressBarFill.style.backgroundColor = '#cf1322';
+      } else if (job.status === 'cancelled') {
+        progressMetricsText.textContent = 'Cancelled by user';
+        progressBarFill.style.backgroundColor = '#cf1322';
+        if (btnCancel) btnCancel.classList.add('hidden');
+      }
+    }
+
+    if (btnCancel) {
+      btnCancel.addEventListener('click', async () => {
+        if (!activeJobId) return;
+        try {
+          await cancelDownload(activeJobId);
+          if (pollInterval) clearInterval(pollInterval);
+        } catch (err) {
+          console.error('Error cancelling:', err);
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .downloader-island {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .downloader-hero {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .hero-brand {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-ink);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .hero-tagline {
+    font-size: 18px;
+    color: var(--color-muted);
+  }
+
+  .search-bar-pill {
+    width: 100%;
+    height: 64px;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-full);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    padding: 8px 8px 8px 24px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .search-bar-pill:focus-within,
+  .search-bar-pill:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: var(--color-ink);
+  }
+
+  .search-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .search-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-ink);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: 16px;
+    color: var(--color-ink);
+    width: 100%;
+  }
+
+  .search-input::placeholder {
+    color: var(--color-muted);
+  }
+
+  .search-orb {
+    height: 48px;
+    padding: 0 24px;
+    background-color: var(--color-primary);
+    border-radius: var(--rounded-full);
+    border: none;
+    color: var(--color-on-primary);
+    font-family: var(--font-family);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+
+  .search-orb:hover {
+    background-color: var(--color-primary-active);
+  }
+
+  .status-wrapper {
+    margin-top: 16px;
+    margin-bottom: 24px;
+  }
+
+  .error-banner {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #fff1f0;
+    border: 1px solid #ffa39e;
+    color: #cf1322;
+    font-size: 14px;
+    border-radius: var(--rounded-sm);
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .analysis-container {
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>

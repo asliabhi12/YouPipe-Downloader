@@ -1,0 +1,113 @@
+---
+---
+
+<div id="agent-status-container" class="agent-status-card checking">
+  <div class="status-indicator">
+    <span id="status-dot" class="dot"></span>
+    <span id="status-text" class="status-title">Checking local downloader helper...</span>
+  </div>
+  <p id="status-help" class="status-desc hidden">
+    Install the YTD Local helper to enable direct downloads to your device.
+  </p>
+</div>
+
+<script>
+  import { checkAgent } from '../lib/agent';
+
+  async function updateStatus() {
+    const container = document.getElementById('agent-status-container');
+    const dot = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    const help = document.getElementById('status-help');
+
+    if (!container || !dot || !text || !help) return;
+
+    const health = await checkAgent();
+
+    if (health && health.status === 'ok') {
+      container.className = 'agent-status-card online';
+      dot.className = 'dot green';
+      text.textContent = '● Downloader ready';
+      help.classList.add('hidden');
+    } else if (health && health.status === 'degraded') {
+      container.className = 'agent-status-card warning';
+      dot.className = 'dot yellow';
+      text.textContent = '● Downloader helper active (dependencies missing)';
+      help.textContent = 'yt-dlp or ffmpeg missing on host system.';
+      help.classList.remove('hidden');
+    } else {
+      container.className = 'agent-status-card offline';
+      dot.className = 'dot gray';
+      text.textContent = '○ Downloader helper not running';
+      help.textContent = 'Install the YTD Local helper to enable downloads.';
+      help.classList.remove('hidden');
+    }
+  }
+
+  updateStatus();
+  setInterval(updateStatus, 5000);
+</script>
+
+<style>
+  .agent-status-card {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: 9999px;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+    margin: 16px 0;
+  }
+
+  .agent-status-card.offline {
+    border-radius: 14px;
+    background-color: #fff1f0;
+    border-color: #ffa39e;
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .dot.green {
+    background-color: #008a05;
+    box-shadow: 0 0 8px rgba(0, 138, 5, 0.4);
+  }
+
+  .dot.yellow {
+    background-color: #d46b08;
+  }
+
+  .dot.gray {
+    background-color: #8c8c8c;
+  }
+
+  .status-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .status-desc {
+    font-size: 13px;
+    color: var(--color-muted);
+    margin-top: 4px;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+</style>

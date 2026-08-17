@@ -1,0 +1,51 @@
+---
+interface Props {
+  slotLocation?: string;
+}
+
+const { slotLocation = "content-banner" } = Astro.props;
+---
+
+<div class="ad-placeholder-wrapper" data-slot={slotLocation}>
+  <div class="ad-label">ADVERTISEMENT</div>
+  <div class="ad-box">
+    <span class="ad-text">Ad Placement Area</span>
+  </div>
+</div>
+
+<style>
+  .ad-placeholder-wrapper {
+    margin: 32px 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ad-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #929292;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .ad-box {
+    width: 100%;
+    max-width: 728px;
+    height: 90px;
+    background-color: #f7f7f7;
+    border: 1px dashed #dddddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ad-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #929292;
+  }
+</style>
