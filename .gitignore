@@ -1,0 +1,32 @@
+# Binaries and executables
+agent
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+
+# Test binaries and coverage reports
+*.test
+*.out
+coverage.txt
+coverage.out
+
+# OS metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local build artifacts & temporary downloads
+downloads/
