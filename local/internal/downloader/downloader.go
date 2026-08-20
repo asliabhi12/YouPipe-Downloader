@@ -23,6 +23,7 @@ var (
 	ErrMetadataFailed = errors.New("metadata_failed")
 	ErrDownloadFailed = errors.New("download_failed")
 	ErrCancelled      = errors.New("cancelled")
+	ErrFileNotFound   = errors.New("file_not_found")
 )
 
 type Format struct {
@@ -77,7 +78,7 @@ func ValidateURL(rawURL string) error {
 		return fmt.Errorf("%w: %v", ErrInvalidURL, err)
 	}
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
-		return fmt.Errorf("%w: scheme must be http or https", ErrInvalidURL)
+		return fmt.Errorf("%w: scheme must be http or pages must be http/https", ErrInvalidURL)
 	}
 	if parsed.Host == "" {
 		return fmt.Errorf("%w: missing host", ErrInvalidURL)
@@ -208,28 +209,59 @@ func (d *YTDLPDownloader) Metadata(ctx context.Context, rawURL string) (*Metadat
 }
 
 func mapQualityToFormatFlag(quality string) string {
-	switch strings.ToLower(strings.TrimSpace(quality)) {
+	q := strings.ToLower(strings.TrimSpace(quality))
+	switch q {
 	case "best":
 		return "bestvideo+bestaudio/best"
 	case "1080p":
-		return "bestvideo[height<=1080]+bestaudio/best[height<=1080]"
+		return "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
 	case "720p":
-		return "bestvideo[height<=720]+bestaudio/best[height<=720]"
+		return "bestvideo[height<=720]+bestaudio/best[height<=720]/best"
 	case "480p":
-		return "bestvideo[height<=480]+bestaudio/best[height<=480]"
+		return "bestvideo[height<=480]+bestaudio/best[height<=480]/best"
 	case "360p":
-		return "bestvideo[height<=360]+bestaudio/best[height<=360]"
+		return "bestvideo[height<=360]+bestaudio/best[height<=360]/best"
 	case "audio":
 		return "bestaudio/best"
 	default:
-		if strings.HasSuffix(quality, "p") {
-			numStr := strings.TrimSuffix(quality, "p")
+		if strings.HasSuffix(q, "p") {
+			numStr := strings.TrimSuffix(q, "p")
 			if h, err := strconv.Atoi(numStr); err == nil && h > 0 {
-				return fmt.Sprintf("bestvideo[height<=%d]+bestaudio/best[height<=%d]", h, h)
+				return fmt.Sprintf("bestvideo[height<=%d]+bestaudio/best[height<=%d]/best", h, h)
 			}
 		}
 		return "bestvideo+bestaudio/best"
 	}
+}
+
+func verifyOutputFileExists(outputDir string, qualityTag string) error {
+	entries, err := os.ReadDir(outputDir)
+	if err != nil {
+		return fmt.Errorf("failed to read output directory: %w", err)
+	}
+
+	tagLower := strings.ToLower(qualityTag)
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := strings.ToLower(entry.Name())
+
+		// Exclude temporary download files
+		if strings.HasSuffix(name, ".part") || strings.HasSuffix(name, ".ytdl") {
+			continue
+		}
+
+		if strings.Contains(name, fmt.Sprintf("[%s]", tagLower)) {
+			info, err := entry.Info()
+			if err == nil && info.Size() > 0 {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("%w: no completed file with quality [%s] found in %s", ErrFileNotFound, qualityTag, outputDir)
 }
 
 func (d *YTDLPDownloader) Download(
@@ -255,17 +287,42 @@ func (d *YTDLPDownloader) Download(
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	formatArg := mapQualityToFormatFlag(quality)
-	outputTemplate := filepath.Join(outputDir, "%(title)s [%(id)s].%(ext)s")
+	qClean := strings.TrimSpace(quality)
+	if qClean == "" {
+		qClean = "best"
+	}
 
-	cmd := exec.CommandContext(ctx, d.YtdlpPath,
+	var args []string
+	args = append(args,
 		"--newline",
 		"--no-playlist",
+		"--extractor-args", "youtube:player_client=android",
 		"--progress-template", "%(progress.status)s|%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s|%(progress.speed)s|%(progress.eta)s",
-		"-f", formatArg,
-		"-o", outputTemplate,
-		rawURL,
 	)
+
+	// Distinct output template per quality to avoid filename collisions
+	outputTemplate := filepath.Join(outputDir, fmt.Sprintf("%%(title)s [%%(id)s] [%s].%%(ext)s", qClean))
+
+	if strings.EqualFold(qClean, "audio") {
+		// Audio extraction to MP3 via FFmpeg
+		args = append(args,
+			"-x",
+			"--audio-format", "mp3",
+			"--audio-quality", "0",
+			"-f", "bestaudio/best",
+			"-o", outputTemplate,
+			rawURL,
+		)
+	} else {
+		formatArg := mapQualityToFormatFlag(qClean)
+		args = append(args,
+			"-f", formatArg,
+			"-o", outputTemplate,
+			rawURL,
+		)
+	}
+
+	cmd := exec.CommandContext(ctx, d.YtdlpPath, args...)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -281,7 +338,7 @@ func (d *YTDLPDownloader) Download(
 		return fmt.Errorf("%w: %v", ErrDownloadFailed, err)
 	}
 
-	// Read output concurrently
+	// Read stderr concurrently
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
@@ -348,6 +405,11 @@ func (d *YTDLPDownloader) Download(
 		return ErrCancelled
 	}
 	if err != nil {
+		return fmt.Errorf("%w: %v", ErrDownloadFailed, err)
+	}
+
+	// Verify that expected output file actually exists on disk!
+	if err := verifyOutputFileExists(outputDir, qClean); err != nil {
 		return fmt.Errorf("%w: %v", ErrDownloadFailed, err)
 	}
 

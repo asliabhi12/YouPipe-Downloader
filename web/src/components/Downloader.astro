@@ -53,6 +53,7 @@ import DownloadProgress from './DownloadProgress.astro';
   let currentUrl = '';
   let activeJobId = '';
   let pollInterval: any = null;
+  let isStartingJob = false;
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('downloader-url-form');
@@ -102,6 +103,18 @@ import DownloadProgress from './DownloadProgress.astro';
       }
     });
 
+    // Single delegated click listener on analysisContainer to prevent duplicate event listeners
+    analysisContainer.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const btn = target.closest('.btn-download-format') as HTMLButtonElement;
+      if (!btn) return;
+
+      const quality = btn.getAttribute('data-quality') || '1080p';
+      if (isStartingJob) return;
+
+      startJob(currentUrl, quality, btn);
+    });
+
     function renderMetadata(meta: any) {
       analysisContainer.classList.remove('hidden');
       
@@ -120,20 +133,18 @@ import DownloadProgress from './DownloadProgress.astro';
         duration.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
       }
 
-      // Bind format download buttons
-      const formatButtons = analysisContainer.querySelectorAll('.btn-download-format');
-      formatButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const quality = btn.getAttribute('data-quality') || '1080p';
-          startJob(currentUrl, quality);
-        });
-      });
-
       analysisContainer.scrollIntoView({ behavior: 'smooth' });
     }
 
-    async function startJob(url: string, quality: string) {
+    async function startJob(url: string, quality: string, btnElement?: HTMLButtonElement) {
+      if (isStartingJob) return;
+      isStartingJob = true;
       hideError();
+
+      if (btnElement) {
+        btnElement.disabled = true;
+      }
+
       try {
         const { job_id } = await createDownload(url, quality);
         activeJobId = job_id;
@@ -146,6 +157,11 @@ import DownloadProgress from './DownloadProgress.astro';
         startPolling(job_id);
       } catch (err: any) {
         showError(err.message || 'Failed to start download job.');
+      } finally {
+        isStartingJob = false;
+        if (btnElement) {
+          btnElement.disabled = false;
+        }
       }
     }
 
