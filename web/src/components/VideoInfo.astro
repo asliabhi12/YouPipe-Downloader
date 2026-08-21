@@ -22,7 +22,7 @@ const formattedDuration = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 
 <div class="video-info-card">
   <div class="thumbnail-wrapper">
-    <img src={thumbnail || "https://via.placeholder.com/320x180"} alt={title} class="thumbnail-img" />
+    <img src={thumbnail || "/thumbnail-fallback.svg"} alt={title} class="thumbnail-img" />
     <div class="duration-badge">{formattedDuration}</div>
   </div>
 

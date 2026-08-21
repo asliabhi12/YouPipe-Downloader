@@ -22,11 +22,33 @@ coverage.out
 ehthumbs.db
 Thumbs.db
 
-# IDE and Editor files
+# IDE, Tooling and Editor files
 .idea/
 .vscode/
+.claude/
 *.swp
 *.swo
 
+# Node & Frontend dependencies & builds
+node_modules/
+dist/
+.astro/
+
+# Python virtual environments & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Environment files & logs
+.env
+.env.*
+*.log
+
 # Local build artifacts & temporary downloads
 downloads/
+test_downloads/
+scratch/
+/server/tmp/

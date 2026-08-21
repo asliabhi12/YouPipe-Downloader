@@ -1,46 +1,43 @@
 ---
 ---
 
-<div id="agent-status-container" class="agent-status-card checking">
-  <div class="status-indicator">
-    <span id="status-dot" class="dot"></span>
-    <span id="status-text" class="status-title">Checking local downloader helper...</span>
+<div id="agent-status-container" class="helper-status-wrapper">
+  <!-- Helper Ready Banner -->
+  <div id="helper-ready-card" class="helper-card helper-ready hidden">
+    <div class="status-left">
+      <span class="status-dot green"></span>
+      <span class="status-title">YouPiper Helper ready</span>
+    </div>
+    <span class="status-subtitle">Downloads go directly to your computer.</span>
   </div>
-  <p id="status-help" class="status-desc hidden">
-    Install the YTD Local helper to enable direct downloads to your device.
-  </p>
+
+  <!-- Helper Promo Banner (when helper unavailable) -->
+  <div id="helper-promo-card" class="helper-card helper-promo hidden">
+    <div class="promo-left">
+      <div class="promo-title">⚡ Faster downloads with YouPiper Helper</div>
+      <div class="promo-subtitle">Download directly to your computer. No server queue.</div>
+    </div>
+    <a href="/helper" class="btn-install-helper">Install Helper</a>
+  </div>
 </div>
 
 <script>
   import { checkAgent } from '../lib/agent';
 
   async function updateStatus() {
-    const container = document.getElementById('agent-status-container');
-    const dot = document.getElementById('status-dot');
-    const text = document.getElementById('status-text');
-    const help = document.getElementById('status-help');
+    const readyCard = document.getElementById('helper-ready-card');
+    const promoCard = document.getElementById('helper-promo-card');
 
-    if (!container || !dot || !text || !help) return;
+    if (!readyCard || !promoCard) return;
 
     const health = await checkAgent();
 
-    if (health && health.status === 'ok') {
-      container.className = 'agent-status-card online';
-      dot.className = 'dot green';
-      text.textContent = '● Downloader ready';
-      help.classList.add('hidden');
-    } else if (health && health.status === 'degraded') {
-      container.className = 'agent-status-card warning';
-      dot.className = 'dot yellow';
-      text.textContent = '● Downloader helper active (dependencies missing)';
-      help.textContent = 'yt-dlp or ffmpeg missing on host system.';
-      help.classList.remove('hidden');
+    if (health && (health.status === 'ok' || health.status === 'degraded')) {
+      readyCard.classList.remove('hidden');
+      promoCard.classList.add('hidden');
     } else {
-      container.className = 'agent-status-card offline';
-      dot.className = 'dot gray';
-      text.textContent = '○ Downloader helper not running';
-      help.textContent = 'Install the YTD Local helper to enable downloads.';
-      help.classList.remove('hidden');
+      readyCard.classList.add('hidden');
+      promoCard.classList.remove('hidden');
     }
   }
 
@@ -49,62 +46,107 @@
 </script>
 
 <style>
-  .agent-status-card {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 24px;
-    border-radius: 9999px;
-    background-color: var(--color-canvas);
-    border: 1px solid var(--color-hairline);
-    box-shadow: var(--shadow-card);
-    transition: all 0.3s ease;
+  .helper-status-wrapper {
+    width: 100%;
     margin: 16px 0;
   }
 
-  .agent-status-card.offline {
-    border-radius: 14px;
-    background-color: #fff1f0;
-    border-color: #ffa39e;
+  .helper-card {
+    border-radius: var(--rounded-md);
+    padding: 12px 18px;
+    transition: all 0.2s ease;
   }
 
-  .status-indicator {
+  .helper-card.helper-ready {
+    background-color: #f6ffed;
+    border: 1px solid #b7eb8f;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  @media (max-width: 640px) {
+    .helper-card.helper-ready {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+  }
+
+  .status-left {
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .dot {
-    width: 10px;
-    height: 10px;
+  .status-dot {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     display: inline-block;
+    flex-shrink: 0;
   }
 
-  .dot.green {
-    background-color: #008a05;
-    box-shadow: 0 0 8px rgba(0, 138, 5, 0.4);
-  }
-
-  .dot.yellow {
-    background-color: #d46b08;
-  }
-
-  .dot.gray {
-    background-color: #8c8c8c;
+  .status-dot.green {
+    background-color: #52c41a;
+    box-shadow: 0 0 6px rgba(82, 196, 26, 0.5);
   }
 
   .status-title {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
+    color: #135200;
+  }
+
+  .status-subtitle {
+    font-size: 13px;
+    color: #237804;
+  }
+
+  .helper-card.helper-promo {
+    background-color: #f9f9fb;
+    border: 1px solid var(--color-hairline);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .helper-card.helper-promo {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+
+  .promo-title {
+    font-size: 14px;
+    font-weight: 700;
     color: var(--color-ink);
   }
 
-  .status-desc {
+  .promo-subtitle {
     font-size: 13px;
     color: var(--color-muted);
-    margin-top: 4px;
+    margin-top: 2px;
+  }
+
+  .btn-install-helper {
+    background-color: var(--color-ink);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--rounded-sm);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-install-helper:hover {
+    background-color: #000000;
   }
 
   .hidden {

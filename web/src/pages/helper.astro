@@ -1,0 +1,258 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="YouPiper Helper — Install once. Forget about it."
+  description="Install YouPiper Helper for direct, unthrottled video downloads to your computer with zero server queues."
+>
+  <div class="helper-page-wrapper">
+    <!-- Hero Section -->
+    <section class="helper-hero">
+      <div class="badge-pill">⚡ Local Download Companion</div>
+      <h1 class="hero-title">YouPiper Helper</h1>
+      <p class="hero-subtitle">Install once. Forget about it.</p>
+    </section>
+
+    <!-- Key Benefits Section -->
+    <section class="benefits-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon">⚡</div>
+        <h3 class="benefit-title">Faster downloads</h3>
+        <p class="benefit-desc">
+          Downloads video and audio directly to your computer at maximum network speed.
+        </p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">🚀</div>
+        <h3 class="benefit-title">No server queue</h3>
+        <p class="benefit-desc">
+          Your download doesn't wait for other users or public cloud bandwidth caps.
+        </p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">🔒</div>
+        <h3 class="benefit-title">100% Private</h3>
+        <p class="benefit-desc">
+          All media streams flow directly from YouTube to your local disk.
+        </p>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-icon">✨</div>
+        <h3 class="benefit-title">Simple</h3>
+        <p class="benefit-desc">
+          Install once and YouPiper handles the rest automatically whenever you visit the site.
+        </p>
+      </div>
+    </section>
+
+    <!-- Installation Downloads Section -->
+    <section class="download-box">
+      <h2 class="box-title">Get YouPiper Helper</h2>
+      <p class="box-desc">
+        Installers aren't ready yet — we're still putting the finishing touches on them.
+        Until then, downloads work normally right here on the site without it.
+      </p>
+
+      <div class="installer-buttons">
+        <div class="installer-card">
+          <span class="os-name">macOS</span>
+          <span class="btn-installer is-pending" aria-disabled="true">Coming soon</span>
+          <span class="build-note">macOS 12 or later</span>
+        </div>
+
+        <div class="installer-card">
+          <span class="os-name">Windows</span>
+          <span class="btn-installer is-pending" aria-disabled="true">Coming soon</span>
+          <span class="build-note">Windows 10 or later</span>
+        </div>
+      </div>
+
+      <p class="fallback-note">
+        <a href="/">Download a video now</a> — no Helper required.
+      </p>
+    </section>
+
+    <!-- Back link -->
+    <div class="back-footer">
+      <a href="/" class="back-link">← Back to Downloader</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .helper-page-wrapper {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 60px 24px;
+  }
+
+  .helper-hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .badge-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    background-color: #e6f4ff;
+    color: #0958d9;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: var(--rounded-full);
+    margin-bottom: 16px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--color-ink);
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+  }
+
+  .hero-subtitle {
+    font-size: 20px;
+    color: var(--color-muted);
+  }
+
+  .benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .benefit-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-md);
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .benefit-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .benefit-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+  }
+
+  .benefit-desc {
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.5;
+  }
+
+  .download-box {
+    background-color: var(--color-surface-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-lg);
+    padding: 40px 32px;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .box-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 8px;
+  }
+
+  .box-desc {
+    font-size: 15px;
+    color: var(--color-muted);
+    margin-bottom: 32px;
+  }
+
+  .installer-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .installer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-canvas);
+    padding: 20px;
+    border-radius: var(--rounded-md);
+    border: 1px solid var(--color-hairline);
+    min-width: 240px;
+  }
+
+  .os-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .btn-installer {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font-weight: 600;
+    border-radius: var(--rounded-sm);
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-installer:hover {
+    background-color: var(--color-primary-active);
+  }
+
+  /* Not a link yet — installers aren't built. Reads as inert, not clickable. */
+  .btn-installer.is-pending,
+  .btn-installer.is-pending:hover {
+    background-color: var(--color-surface-strong);
+    color: var(--color-muted);
+    cursor: default;
+  }
+
+  .build-note {
+    font-size: 12px;
+    color: var(--color-muted);
+  }
+
+  .fallback-note {
+    margin-top: 28px;
+    font-size: 15px;
+    color: var(--color-muted);
+  }
+
+  .fallback-note a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .back-footer {
+    text-align: center;
+  }
+
+  .back-link {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

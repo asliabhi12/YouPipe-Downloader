@@ -3,95 +3,194 @@ interface FormatItem {
   quality: string;
   label?: string;
 }
-
-interface Props {
-  formats?: FormatItem[];
-}
-
-const { formats = [
-  { quality: '1080p', label: '1080p Full HD' },
-  { quality: '720p', label: '720p HD' },
-  { quality: '480p', label: '480p SD' },
-  { quality: '360p', label: '360p Low' },
-  { quality: 'audio', label: 'Audio Only (MP3)' }
-] } = Astro.props;
 ---
-
-<div class="format-list-container">
-  <h4 class="format-title">Available Download Formats</h4>
-  <div class="format-rows">
-    {formats.map((f) => (
-      <div class="format-row">
-        <span class="format-name">{f.label || f.quality}</span>
-        <button type="button" class="btn-download-format" data-quality={f.quality}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Download
-        </button>
-      </div>
-    ))}
+<div class="download-formats-section">
+  <div class="formats-header">
+    <h3 class="formats-title">Download video</h3>
+    <p class="formats-subtitle">Choose your quality</p>
   </div>
+
+  <!-- Video Formats List -->
+  <div class="format-rows-container video-rows" id="video-format-rows"></div>
+
+  <!-- Audio Format Section -->
+  <div class="audio-section-header">
+    <h4 class="audio-title">Audio</h4>
+  </div>
+  <div class="format-rows-container audio-rows" id="audio-format-rows"></div>
 </div>
 
 <style>
-  .format-list-container {
+  .download-formats-section {
     margin-top: 24px;
   }
 
-  .format-title {
-    font-size: 15px;
-    font-weight: 600;
+  .formats-header {
+    margin-bottom: 14px;
+  }
+
+  .formats-title {
+    font-size: 20px;
+    font-weight: 700;
     color: var(--color-ink);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .formats-subtitle {
+    font-size: 14px;
+    color: var(--color-muted);
+    margin: 4px 0 0 0;
+  }
+
+  .format-rows-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .audio-section-header {
+    margin-top: 28px;
     margin-bottom: 12px;
   }
 
-  .format-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  .audio-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin: 0;
   }
 
-  .format-row {
+  /* Shared format row styles */
+  :global(.format-card) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 14px 20px;
     background-color: var(--color-canvas);
     border: 1px solid var(--color-hairline);
-    border-radius: var(--rounded-sm);
-    transition: border-color 0.2s ease;
+    border-radius: var(--rounded-md);
+    transition: all 0.2s ease;
   }
 
-  .format-row:hover {
+  :global(.format-card:hover) {
     border-color: var(--color-ink);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   }
 
-  .format-name {
-    font-size: 14px;
-    font-weight: 600;
+  :global(.format-main-info) {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  :global(.quality-badge) {
+    font-size: 15px;
+    font-weight: 700;
     color: var(--color-ink);
+    min-width: 52px;
   }
 
-  .btn-download-format {
-    background-color: var(--color-primary);
-    color: var(--color-on-primary);
-    font-family: var(--font-family);
+  :global(.quality-label) {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-body);
+    min-width: 65px;
+  }
+
+  :global(.resolution-tag) {
     font-size: 13px;
+    font-weight: 500;
+    color: var(--color-muted);
+    background-color: var(--color-surface-soft);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  :global(.container-badge) {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-primary);
+    background-color: #fff0f3;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  :global(.audio-card) {
+    background-color: #fafafa;
+  }
+
+  :global(.audio-emoji) {
+    font-size: 16px;
+  }
+
+  :global(.btn-download-format) {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-family: var(--font-family);
+    font-size: 14px;
     font-weight: 600;
     border: none;
     border-radius: var(--rounded-sm);
-    padding: 8px 16px;
+    padding: 9px 20px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s ease;
+    gap: 8px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
   }
 
-  .btn-download-format:hover {
+  :global(.btn-download-format:hover) {
     background-color: var(--color-primary-active);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(255, 56, 92, 0.25);
+  }
+
+  :global(.btn-download-format:active) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  :global(.btn-download-format:disabled) {
+    background-color: #e5e5e5;
+    color: #8c8c8c;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  :global(.btn-download-format:focus-visible) {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  :global(.dl-icon) {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+
+  /* Responsive layout for Mobile */
+  @media (max-width: 640px) {
+    :global(.format-card) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+
+    :global(.format-main-info) {
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    :global(.btn-download-format) {
+      width: 100%;
+      justify-content: center;
+      padding: 11px;
+    }
   }
 </style>

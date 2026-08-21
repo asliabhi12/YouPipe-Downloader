@@ -7,16 +7,17 @@ interface Props {
 }
 
 const {
-  title = "YTD Local — Free Local YouTube Video Downloader & Converter",
-  description = "Fast, free, and private YouTube video downloader. Download 1080p, 720p, 480p, and MP3 audio directly to your device with zero server tracking.",
+  title = "YouPiper — Free YouTube Video Downloader & MP3 Converter",
+  description = "Fast, free YouTube video downloader. Save 1080p, 720p, 480p, and 360p MP4 video or MP3 audio. Works right in your browser, and even faster with YouPiper Helper.",
   canonicalUrl = Astro.url.href,
-  ogImage = "https://ytdlocal.com/og-image.png"
+  ogImage = "https://youpiper.com/og-image.png"
 } = Astro.props;
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "YTD Local",
+  "name": "YouPiper",
+  "url": "https://youpiper.com",
   "operatingSystem": "macOS, Windows, Linux",
   "applicationCategory": "MultimediaApplication",
   "offers": {
@@ -66,7 +67,7 @@ const jsonLd = {
         <svg viewBox="0 0 32 32" class="brand-icon">
           <path d="M16 1C7.716 1 1 7.716 1 16c0 8.284 6.716 15 15 15 8.284 0 15-6.716 15-15C31 7.716 24.284 1 16 1zm-3.5 21.5v-13l10 6.5-10 6.5z"/>
         </svg>
-        <span class="brand-name">YTD Local</span>
+        <span class="brand-name">YouPiper</span>
       </a>
 
       <nav class="nav-links">
@@ -74,6 +75,7 @@ const jsonLd = {
         <a href="/youtube-video-downloader" class="nav-link">Video Downloader</a>
         <a href="/youtube-mp3" class="nav-link">MP3 Downloader</a>
         <a href="/youtube-mp4" class="nav-link">MP4 Converter</a>
+        <a href="/helper" class="nav-link nav-link-helper">Get Helper</a>
       </nav>
     </div>
   </header>
@@ -88,9 +90,9 @@ const jsonLd = {
     <div class="footer-container">
       <div class="footer-grid">
         <div class="footer-col">
-          <h4 class="footer-title">YTD Local</h4>
+          <h4 class="footer-title">YouPiper</h4>
           <p class="footer-text">
-            Minimal local companion & website for high quality video downloads directly on your device.
+            A minimal, fast downloader for high quality video and audio — in your browser, or straight to your computer with YouPiper Helper.
           </p>
         </div>
         <div class="footer-col">
@@ -99,18 +101,19 @@ const jsonLd = {
             <li><a href="/youtube-video-downloader">YouTube Video Downloader</a></li>
             <li><a href="/youtube-mp3">YouTube to MP3 Converter</a></li>
             <li><a href="/youtube-mp4">YouTube to MP4 Downloader</a></li>
+            <li><a href="/helper">Get YouPiper Helper</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4 class="footer-title">Legal & Usage</h4>
           <p class="footer-legal">
-            YTD Local is intended for personal backup and educational use. Users are responsible for complying with content owners' permissions and applicable copyright laws.
+            YouPiper is intended for personal backup and educational use. Users are responsible for complying with content owners' permissions and applicable copyright laws.
           </p>
         </div>
       </div>
 
       <div class="legal-band">
-        <span>© {new Date().getFullYear()} YTD Local • Fast Local Companion Engine</span>
+        <span>© {new Date().getFullYear()} YouPiper</span>
       </div>
     </div>
   </footer>
@@ -213,6 +216,28 @@ const jsonLd = {
 
   .nav-link:hover {
     color: var(--color-ink);
+  }
+
+  /* Helper is a desktop companion, so this link intentionally rides the
+     nav and disappears with it on mobile, where it would be a dead end. */
+  .nav-link-helper {
+    color: var(--color-ink);
+    font-weight: 600;
+    padding: 7px 14px;
+    margin: -7px 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-full);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .nav-link-helper:hover {
+    border-color: var(--color-ink);
+    background-color: var(--color-surface-soft);
+  }
+
+  .nav-link-helper:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 
   .page-content {

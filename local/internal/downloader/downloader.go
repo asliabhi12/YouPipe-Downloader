@@ -143,6 +143,7 @@ func (d *YTDLPDownloader) Metadata(ctx context.Context, rawURL string) (*Metadat
 		"--dump-json",
 		"--no-warnings",
 		"--no-playlist",
+		"--extractor-args", "youtube:player_client=web_embedded",
 		rawURL,
 	)
 
@@ -296,7 +297,7 @@ func (d *YTDLPDownloader) Download(
 	args = append(args,
 		"--newline",
 		"--no-playlist",
-		"--extractor-args", "youtube:player_client=android",
+		"--extractor-args", "youtube:player_client=web_embedded",
 		"--progress-template", "%(progress.status)s|%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s|%(progress.speed)s|%(progress.eta)s",
 	)
 
@@ -316,6 +317,7 @@ func (d *YTDLPDownloader) Download(
 	} else {
 		formatArg := mapQualityToFormatFlag(qClean)
 		args = append(args,
+			"--merge-output-format", "mp4",
 			"-f", formatArg,
 			"-o", outputTemplate,
 			rawURL,

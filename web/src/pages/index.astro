@@ -5,8 +5,8 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
 ---
 
 <Layout
-  title="YTD Local — Free Local YouTube Video Downloader"
-  description="Download YouTube videos and audio directly to your device with 1080p HD support. Zero server proxying, completely private local companion downloader."
+  title="YouPiper — Free YouTube Video Downloader"
+  description="Download YouTube videos and audio in 1080p, 720p, 480p, and 360p MP4 or MP3. Works straight from your browser, and even faster with YouPiper Helper."
 >
   <div class="homepage-wrapper">
     <!-- Hero & Downloader (Above the fold) -->
@@ -19,7 +19,7 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
 
     <!-- How It Works Section -->
     <section class="content-section">
-      <h2 class="section-heading">How YTD Local Works</h2>
+      <h2 class="section-heading">How YouPiper Works</h2>
       <div class="steps-grid">
         <div class="step-card">
           <div class="step-number">1</div>
@@ -29,44 +29,44 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
         <div class="step-card">
           <div class="step-number">2</div>
           <h3 class="step-title">Analyze Formats</h3>
-          <p class="step-desc">Click analyze to parse available qualities (1080p, 720p, 480p, MP3).</p>
+          <p class="step-desc">Click analyze to see every quality the video offers — 1080p, 720p, 480p, 360p, and MP3.</p>
         </div>
         <div class="step-card">
           <div class="step-number">3</div>
-          <h3 class="step-title">Select Quality</h3>
-          <p class="step-desc">Choose your preferred video resolution or audio-only output.</p>
+          <h3 class="step-title">Pick Your Quality</h3>
+          <p class="step-desc">Choose a video resolution, or grab audio only as an MP3.</p>
         </div>
         <div class="step-card">
           <div class="step-number">4</div>
-          <h3 class="step-title">Direct Local Download</h3>
-          <p class="step-desc">The local companion performs the download directly to your Downloads folder.</p>
+          <h3 class="step-title">Download</h3>
+          <p class="step-desc">Your file arrives through your browser. With YouPiper Helper installed, it lands in your Downloads folder instead — no waiting in line.</p>
         </div>
       </div>
     </section>
 
     <!-- Features Section -->
     <section class="content-section light-bg">
-      <h2 class="section-heading">Why Choose YTD Local?</h2>
+      <h2 class="section-heading">Why Choose YouPiper?</h2>
       <div class="features-grid">
         <div class="feature-card">
-          <div class="feature-icon">🔒</div>
-          <h3 class="feature-title">100% Private & Local</h3>
+          <div class="feature-icon">🔓</div>
+          <h3 class="feature-title">No Account, No Limits</h3>
           <p class="feature-desc">
-            The website never touches your video stream. All media processing happens strictly on your machine.
+            No sign-up, no email, no install required. Paste a link and download — nothing is kept after your file is delivered.
           </p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⚡</div>
-          <h3 class="feature-title">Maximum Download Speed</h3>
+          <h3 class="feature-title">Faster With Helper</h3>
           <p class="feature-desc">
-            Utilizes mature yt-dlp and FFmpeg engines for direct multi-threaded downloads without cloud throttles.
+            Install YouPiper Helper once and downloads run at your own connection speed, straight to your computer, with no server queue.
           </p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🎬</div>
-          <h3 class="feature-title">Full HD & Audio Support</h3>
+          <h3 class="feature-title">Real MP4 & MP3 Files</h3>
           <p class="feature-desc">
-            Extract up to 1080p video with pristine audio merging or convert directly to high bitrate MP3.
+            Video comes out as a genuine MP4 up to 1080p with audio properly merged in. Audio-only downloads come out as MP3.
           </p>
         </div>
       </div>
@@ -80,37 +80,44 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
       <h2 class="section-heading">Frequently Asked Questions</h2>
       <div class="faq-list">
         <details class="faq-item" open>
-          <summary class="faq-question">How does YTD Local work?</summary>
+          <summary class="faq-question">How does YouPiper work?</summary>
           <div class="faq-answer">
-            YTD Local uses a tiny local companion helper process running on <code>127.0.0.1:47821</code>. When you click Download on this website, your browser sends a request to your local helper, which runs yt-dlp to download the video directly to your computer.
+            Paste a YouTube link and press Analyze. YouPiper reads the video's available qualities and shows them as a list. Pick one, press Download, and YouPiper fetches the video, merges the audio into it, and hands you the finished file.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">Where is the downloaded file saved?</summary>
+          <summary class="faq-question">Do I need to install anything?</summary>
           <div class="faq-answer">
-            Files are saved directly in your operating system's standard Downloads directory under <code>Downloads/YTD Local/</code>.
+            No. YouPiper works entirely in your browser with nothing installed — that is the default for everyone. YouPiper Helper is an optional add-on that makes downloads faster, but you never need it to download a video.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">Does the website upload or store my video?</summary>
+          <summary class="faq-question">What is YouPiper Helper?</summary>
           <div class="faq-answer">
-            No. The website is purely a user interface. The video content passes directly from YouTube to your local helper without ever routed through our website servers.
+            YouPiper Helper is a small free companion you install once on your computer. When it's running, this site hands your download to it instead of to our servers, so the video downloads at your own connection speed and saves straight to your Downloads folder — no queue, no waiting behind other people. <a href="/helper">Learn more about YouPiper Helper</a>.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">Why do I need the local helper?</summary>
+          <summary class="faq-question">Where do my downloads go?</summary>
           <div class="faq-answer">
-            Browser security restrictions prevent web pages from saving arbitrary files directly to disk without prompts or extracting high-resolution video streams. The local helper bypasses these limitations efficiently and privately.
+            Without the Helper, the file is delivered through your browser and lands wherever your browser normally saves downloads. With YouPiper Helper installed, it's saved straight into your Downloads folder automatically.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">Does YTD Local work on macOS and Windows?</summary>
+          <summary class="faq-question">What qualities and formats are available?</summary>
           <div class="faq-answer">
-            Yes! The Go companion agent is cross-platform and runs seamlessly on macOS, Windows, and Linux.
+            Video is available in 1080p, 720p, 480p, and 360p as MP4 files, depending on what the original upload offers. Audio-only downloads are delivered as MP3.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">Does YouPiper Helper work on macOS and Windows?</summary>
+          <div class="faq-answer">
+            Yes — YouPiper Helper runs on macOS, Windows, and Linux. The website itself works on any modern browser, including phones and tablets.
           </div>
         </details>
       </div>
@@ -119,7 +126,7 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     <!-- Legal & Responsible Use Notice -->
     <section class="legal-notice-box">
       <p>
-        <strong>Legal & Responsible Use Notice:</strong> YTD Local is designed for personal archiving and educational purposes. Users are expected to respect copyright law and only download media they own or have explicit permission from the copyright holder to download.
+        <strong>Legal & Responsible Use Notice:</strong> YouPiper is designed for personal archiving and educational purposes. Users are expected to respect copyright law and only download media they own or have explicit permission from the copyright holder to download.
       </p>
     </section>
   </div>
@@ -249,7 +256,6 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     border-radius: var(--rounded-md);
     padding: 20px 24px;
     box-shadow: var(--shadow-card);
-    cursor: pointer;
   }
 
   .faq-question {
@@ -257,6 +263,7 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     font-weight: 600;
     color: var(--color-ink);
     outline: none;
+    cursor: pointer;
   }
 
   .faq-answer {
@@ -264,6 +271,13 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     font-size: 14px;
     color: var(--color-muted);
     line-height: 1.6;
+  }
+
+  .faq-answer a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   /* Legal Notice Box */

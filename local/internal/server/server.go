@@ -73,8 +73,8 @@ func NewServer(addr string, dl downloader.Downloader, jm *jobs.JobManager, outpu
 	s.httpServer = &http.Server{
 		Addr:         addr,
 		Handler:      s.corsMiddleware(mux),
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 2 * time.Minute,
 		IdleTimeout:  60 * time.Second,
 	}
 
@@ -269,13 +269,13 @@ func (s *Server) Start() error {
 		return fmt.Errorf("security error: server must bind to 127.0.0.1 (got %s)", s.addr)
 	}
 
-	log.Printf("YTD Local Server listening on http://%s", s.addr)
+	log.Printf("YouPiper Helper listening on http://%s", s.addr)
 	log.Printf("Default download directory: %s", s.outputDir)
 	return s.httpServer.ListenAndServe()
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	log.Println("Shutting down YTD Local Server...")
+	log.Println("Shutting down YouPiper Helper...")
 	s.jm.CancelAll()
 	return s.httpServer.Shutdown(ctx)
 }

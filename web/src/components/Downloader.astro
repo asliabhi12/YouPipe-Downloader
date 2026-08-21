@@ -7,8 +7,8 @@ import DownloadProgress from './DownloadProgress.astro';
 
 <div class="downloader-island">
   <div class="downloader-hero">
-    <h2 class="hero-brand">YTD Local</h2>
-    <p class="hero-tagline">Download videos directly to your device.</p>
+    <h2 class="hero-brand">YouPiper</h2>
+    <p class="hero-tagline">Free YouTube downloads in MP4 or MP3. No sign-up, no software needed.</p>
   </div>
 
   <!-- Search Input Bar -->
@@ -29,17 +29,13 @@ import DownloadProgress from './DownloadProgress.astro';
     </button>
   </form>
 
-  <!-- Agent Status Indicator -->
-  <div class="status-wrapper">
-    <AgentStatus />
-  </div>
-
   <!-- Error Message Container -->
   <div id="downloader-error" class="error-banner hidden"></div>
 
   <!-- Analysis Results Section -->
   <div id="analysis-results" class="analysis-container hidden">
     <VideoInfo />
+    <AgentStatus />
     <FormatList />
   </div>
 
@@ -48,12 +44,15 @@ import DownloadProgress from './DownloadProgress.astro';
 </div>
 
 <script>
-  import { getMetadata, createDownload, getDownload, cancelDownload } from '../lib/agent';
+  import { analyze, download, getStatus, getFile, isHelperAvailable, QUALITY_SHORT_LABELS, getResolutionText } from '../lib/agent';
 
   let currentUrl = '';
   let activeJobId = '';
+  let activeBackend: 'local' | 'online' = 'online';
   let pollInterval: any = null;
   let isStartingJob = false;
+  let activeDownloadingBtn: HTMLButtonElement | null = null;
+  let activeBtnOriginalText = '';
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('downloader-url-form');
@@ -69,7 +68,8 @@ import DownloadProgress from './DownloadProgress.astro';
     const progressPctText = document.getElementById('progress-pct-text');
     const progressMetricsText = document.getElementById('progress-metrics-text');
     const completedBanner = document.getElementById('completed-banner');
-    const btnCancel = document.getElementById('btn-cancel-job');
+    const completedMessageText = document.getElementById('completed-message-text');
+    const btnSaveFile = document.getElementById('btn-save-file');
 
     if (!form || !input || !btnAnalyze || !errorBanner || !analysisContainer || !progressContainer) return;
 
@@ -80,6 +80,50 @@ import DownloadProgress from './DownloadProgress.astro';
 
     function hideError() {
       errorBanner.classList.add('hidden');
+    }
+
+    function videoRowMarkup(quality: string, height?: number, isHelper: boolean = false): string {
+      const shortLabel = QUALITY_SHORT_LABELS[quality] || quality;
+      const resolution = getResolutionText(height, quality);
+      const btnLabel = isHelper ? '⚡ Download' : 'Download';
+      const iconSvg = isHelper
+        ? `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`
+        : `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+
+      return `
+        <div class="format-card" data-quality="${quality}">
+          <div class="format-main-info">
+            <span class="quality-badge">${quality}</span>
+            <span class="quality-label">${shortLabel}</span>
+            ${resolution ? `<span class="resolution-tag">${resolution}</span>` : ''}
+            <span class="container-badge">MP4</span>
+          </div>
+          <button type="button" class="btn-download-format" data-quality="${quality}">
+            ${iconSvg}
+            <span class="btn-text-content">${btnLabel}</span>
+          </button>
+        </div>`;
+    }
+
+    function audioRowMarkup(isHelper: boolean = false): string {
+      const btnLabel = isHelper ? '⚡ Download' : 'Download';
+      const iconSvg = isHelper
+        ? `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`
+        : `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+
+      return `
+        <div class="format-card audio-card" data-quality="audio">
+          <div class="format-main-info">
+            <span class="audio-emoji">🎵</span>
+            <span class="quality-badge">MP3</span>
+            <span class="quality-label">Audio only</span>
+            <span class="container-badge">MP3</span>
+          </div>
+          <button type="button" class="btn-download-format" data-quality="audio">
+            ${iconSvg}
+            <span class="btn-text-content">${btnLabel}</span>
+          </button>
+        </div>`;
     }
 
     // Form submission: Analyze
@@ -93,17 +137,17 @@ import DownloadProgress from './DownloadProgress.astro';
       btnAnalyze.innerHTML = '<span class="spinner"></span>';
 
       try {
-        const meta = await getMetadata(currentUrl);
-        renderMetadata(meta);
+        const meta = await analyze(currentUrl);
+        await renderMetadata(meta);
       } catch (err: any) {
-        showError(err.message || 'Failed to analyze URL. Make sure the local companion agent is running.');
+        showError(err.message || 'Failed to analyze URL. Please check the URL and try again.');
       } finally {
         btnAnalyze.removeAttribute('disabled');
         btnAnalyze.innerHTML = '<span class="btn-text">Analyze</span>';
       }
     });
 
-    // Single delegated click listener on analysisContainer to prevent duplicate event listeners
+    // Single delegated click listener on analysisContainer
     analysisContainer.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       const btn = target.closest('.btn-download-format') as HTMLButtonElement;
@@ -115,15 +159,15 @@ import DownloadProgress from './DownloadProgress.astro';
       startJob(currentUrl, quality, btn);
     });
 
-    function renderMetadata(meta: any) {
+    async function renderMetadata(meta: any) {
       analysisContainer.classList.remove('hidden');
-      
+
       const thumb = analysisContainer.querySelector('.thumbnail-img') as HTMLImageElement;
       const title = analysisContainer.querySelector('.video-title');
       const uploader = analysisContainer.querySelector('.uploader-name strong');
       const duration = analysisContainer.querySelector('.duration-badge');
 
-      if (thumb) thumb.src = meta.thumbnail || 'https://via.placeholder.com/320x180';
+      if (thumb) thumb.src = meta.thumbnail || '/thumbnail-fallback.svg';
       if (title) title.textContent = meta.title || 'Untitled Video';
       if (uploader) uploader.textContent = meta.uploader || 'Unknown Channel';
 
@@ -131,6 +175,26 @@ import DownloadProgress from './DownloadProgress.astro';
         const mins = Math.floor((meta.duration || 0) / 60);
         const secs = Math.floor((meta.duration || 0) % 60);
         duration.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+
+      const helperReady = await isHelperAvailable();
+      activeBackend = helperReady ? 'local' : 'online';
+
+      const videoContainer = analysisContainer.querySelector('#video-format-rows');
+      const audioContainer = analysisContainer.querySelector('#audio-format-rows');
+
+      const formats = Array.isArray(meta.formats) ? meta.formats : [];
+      const videoFormats = formats.filter((f: any) => f.quality !== 'audio');
+      const hasAudio = formats.some((f: any) => f.quality === 'audio');
+
+      if (videoContainer) {
+        videoContainer.innerHTML = videoFormats
+          .map((f: any) => videoRowMarkup(f.quality, f.height, helperReady))
+          .join('');
+      }
+
+      if (audioContainer) {
+        audioContainer.innerHTML = hasAudio ? audioRowMarkup(helperReady) : '';
       }
 
       analysisContainer.scrollIntoView({ behavior: 'smooth' });
@@ -141,36 +205,59 @@ import DownloadProgress from './DownloadProgress.astro';
       isStartingJob = true;
       hideError();
 
+      if (activeDownloadingBtn) {
+        activeDownloadingBtn.disabled = false;
+        const oldLabel = activeDownloadingBtn.querySelector('.btn-text-content');
+        if (oldLabel && activeBtnOriginalText) oldLabel.textContent = activeBtnOriginalText;
+      }
+
+      activeDownloadingBtn = btnElement || null;
       if (btnElement) {
         btnElement.disabled = true;
+        const labelEl = btnElement.querySelector('.btn-text-content');
+        if (labelEl) {
+          activeBtnOriginalText = labelEl.textContent || '';
+          labelEl.textContent = `Downloading ${quality === 'audio' ? 'MP3' : quality}…`;
+        }
       }
 
       try {
-        const { job_id } = await createDownload(url, quality);
-        activeJobId = job_id;
+        const res = await download(url, quality);
+        activeJobId = res.job_id;
+        activeBackend = res.backend;
 
-        if (qualityTag) qualityTag.textContent = quality;
+        if (qualityTag) qualityTag.textContent = quality === 'audio' ? 'mp3' : quality;
         progressContainer.classList.remove('hidden');
         if (completedBanner) completedBanner.classList.add('hidden');
-        if (btnCancel) btnCancel.classList.remove('hidden');
+        if (btnSaveFile) {
+          if (activeBackend === 'local') {
+            btnSaveFile.classList.add('hidden');
+          } else {
+            btnSaveFile.classList.remove('hidden');
+            btnSaveFile.removeAttribute('disabled');
+            btnSaveFile.textContent = 'Save File';
+          }
+        }
 
-        startPolling(job_id);
+        startPolling(activeJobId, activeBackend);
       } catch (err: any) {
         showError(err.message || 'Failed to start download job.');
-      } finally {
-        isStartingJob = false;
         if (btnElement) {
           btnElement.disabled = false;
+          const labelEl = btnElement.querySelector('.btn-text-content');
+          if (labelEl && activeBtnOriginalText) labelEl.textContent = activeBtnOriginalText;
         }
+      } finally {
+        isStartingJob = false;
       }
     }
 
-    function startPolling(jobId: string) {
+    function startPolling(jobId: string, backend: 'local' | 'online') {
       if (pollInterval) clearInterval(pollInterval);
 
       pollInterval = setInterval(async () => {
         try {
-          const job = await getDownload(jobId);
+          const job = await getStatus(jobId, backend);
           updateProgressUI(job);
 
           if (['completed', 'failed', 'cancelled'].includes(job.status)) {
@@ -189,38 +276,69 @@ import DownloadProgress from './DownloadProgress.astro';
       statusPill.className = `status-pill ${job.status}`;
       statusPill.textContent = job.status;
 
-      const pct = (job.progress || 0).toFixed(0);
+      const pct = Math.round(job.progress || 0);
       progressBarFill.style.width = `${pct}%`;
       progressPctText.textContent = `${pct}%`;
 
       if (job.status === 'downloading') {
-        const speedMB = (job.speed / (1024 * 1024)).toFixed(1);
-        progressMetricsText.textContent = `${speedMB} MB/s • ${job.eta} seconds remaining`;
+        const via = job.backend === 'local' ? ' • via YouPiper Helper' : '';
+        if (typeof job.speed === 'number' && job.eta != null && job.speed > 0) {
+          const speedMB = (job.speed / (1024 * 1024)).toFixed(1);
+          progressMetricsText.textContent = `${speedMB} MB/s • ${job.eta}s remaining${via}`;
+        } else {
+          progressMetricsText.textContent = `Downloading… ${pct}%${via}`;
+        }
       } else if (job.status === 'processing') {
-        progressMetricsText.textContent = 'Merging video & audio with FFmpeg...';
+        progressMetricsText.textContent = 'Merging video & audio…';
       } else if (job.status === 'completed') {
-        progressMetricsText.textContent = 'Finished!';
+        progressMetricsText.textContent = job.backend === 'local' ? 'Saved to your Downloads folder' : 'Finished!';
         progressBarFill.style.backgroundColor = '#389e0d';
-        if (completedBanner) completedBanner.classList.remove('hidden');
-        if (btnCancel) btnCancel.classList.add('hidden');
+        if (completedBanner) {
+          completedBanner.classList.remove('hidden');
+          if (completedMessageText) {
+            completedMessageText.textContent = job.backend === 'local'
+              ? '✓ Download complete. Saved to your Downloads folder.'
+              : '✓ Download complete. Your file is ready.';
+          }
+        }
+        if (activeDownloadingBtn) {
+          const labelEl = activeDownloadingBtn.querySelector('.btn-text-content');
+          if (labelEl) {
+            labelEl.textContent = job.backend === 'local' ? '✓ Downloaded' : '✓ Ready';
+          }
+        }
       } else if (job.status === 'failed') {
         progressMetricsText.textContent = job.error || 'Download failed';
         progressBarFill.style.backgroundColor = '#cf1322';
+        if (activeDownloadingBtn) {
+          activeDownloadingBtn.disabled = false;
+          const labelEl = activeDownloadingBtn.querySelector('.btn-text-content');
+          if (labelEl && activeBtnOriginalText) labelEl.textContent = activeBtnOriginalText;
+        }
       } else if (job.status === 'cancelled') {
         progressMetricsText.textContent = 'Cancelled by user';
         progressBarFill.style.backgroundColor = '#cf1322';
-        if (btnCancel) btnCancel.classList.add('hidden');
+        if (activeDownloadingBtn) {
+          activeDownloadingBtn.disabled = false;
+          const labelEl = activeDownloadingBtn.querySelector('.btn-text-content');
+          if (labelEl && activeBtnOriginalText) labelEl.textContent = activeBtnOriginalText;
+        }
       }
     }
 
-    if (btnCancel) {
-      btnCancel.addEventListener('click', async () => {
+    // Save File button for online mode
+    if (btnSaveFile) {
+      btnSaveFile.addEventListener('click', async () => {
         if (!activeJobId) return;
-        try {
-          await cancelDownload(activeJobId);
-          if (pollInterval) clearInterval(pollInterval);
-        } catch (err) {
-          console.error('Error cancelling:', err);
+        btnSaveFile.setAttribute('disabled', 'true');
+        btnSaveFile.textContent = 'Saving...';
+        const ok = await getFile(activeJobId);
+        if (ok) {
+          btnSaveFile.textContent = 'Saved';
+        } else {
+          btnSaveFile.removeAttribute('disabled');
+          btnSaveFile.textContent = 'Save File';
+          showError('Could not save the file. Please try analyzing and downloading again.');
         }
       });
     }
@@ -322,11 +440,6 @@ import DownloadProgress from './DownloadProgress.astro';
     background-color: var(--color-primary-active);
   }
 
-  .status-wrapper {
-    margin-top: 16px;
-    margin-bottom: 24px;
-  }
-
   .error-banner {
     width: 100%;
     padding: 12px 20px;
@@ -343,6 +456,10 @@ import DownloadProgress from './DownloadProgress.astro';
     width: 100%;
     margin-top: 16px;
   }
+
+  /* Format row and download button styles live in FormatList.astro as
+     :global() rules — the rows are injected via innerHTML, so Astro's
+     scoped styles would never match them. Don't redeclare them here. */
 
   .hidden {
     display: none !important;

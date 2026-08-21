@@ -7,7 +7,6 @@
       <span id="job-status-pill" class="status-pill downloading">Downloading</span>
       <span id="job-quality-tag" class="quality-tag">1080p</span>
     </div>
-    <button type="button" id="btn-cancel-job" class="btn-cancel">Cancel</button>
   </div>
 
   <div class="progress-track">
@@ -16,11 +15,12 @@
 
   <div class="progress-info-row">
     <span id="progress-pct-text" class="progress-pct">0%</span>
-    <span id="progress-metrics-text" class="progress-metrics">Connecting to local helper...</span>
+    <span id="progress-metrics-text" class="progress-metrics">Starting download...</span>
   </div>
 
   <div id="completed-banner" class="completed-message hidden">
-    ✓ Download complete. Saved directly to your Downloads folder.
+    <span id="completed-message-text">✓ Download complete. Your file is ready.</span>
+    <button type="button" id="btn-save-file" class="btn-save">Save File</button>
   </div>
 </div>
 
@@ -83,22 +83,21 @@
     color: var(--color-muted);
   }
 
-  .btn-cancel {
-    background: none;
-    border: 1px solid var(--color-border-strong);
-    color: var(--color-ink);
+  .btn-save {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
     font-family: var(--font-family);
     font-size: 13px;
-    font-weight: 500;
-    padding: 6px 14px;
+    font-weight: 600;
+    border: none;
     border-radius: var(--rounded-sm);
+    padding: 8px 18px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease;
   }
 
-  .btn-cancel:hover {
-    border-color: #cf1322;
-    color: #cf1322;
+  .btn-save:hover {
+    background-color: var(--color-primary-active);
   }
 
   .progress-track {
@@ -136,6 +135,10 @@
     font-size: 14px;
     font-weight: 600;
     border-radius: var(--rounded-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     text-align: center;
   }
 
