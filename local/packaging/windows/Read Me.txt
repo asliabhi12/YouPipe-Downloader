@@ -1,0 +1,50 @@
+YouPiper Helper
+===============
+
+WHAT IT DOES
+
+  Lets YouPiper save videos straight to this PC instead of routing them
+  through a server, so downloads are faster and are not limited by anyone
+  else's bandwidth.
+
+
+INSTALL
+
+  Double-click Install.cmd.
+
+  That is the whole setup. From then on it starts by itself whenever you
+  sign in and stays out of your way - no window, no taskbar button.
+
+  Then just open YouPiper in your browser. It finds the Helper on its own
+  and downloads go directly to your Downloads folder.
+
+  Installing needs no administrator rights and changes nothing outside your
+  own user account.
+
+
+IF WINDOWS SHOWS A WARNING
+
+  "Windows protected your PC" appears for downloads that are new or not yet
+  widely installed. Choose "More info" then "Run anyway" if you trust this
+  download. Your antivirus may also want to scan the files first, which is
+  normal and worth letting it do.
+
+
+TO REMOVE IT
+
+  Double-click Uninstall.cmd.
+  Your downloaded files are never touched.
+
+
+WHAT IT INCLUDES
+
+  YouPiper Helper bundles everything it needs, so you do not have to
+  install anything else. See the Licenses folder for the third-party
+  software it includes and the licences that cover it.
+
+
+PRIVACY AND NETWORK
+
+  The Helper listens only on this computer's own loopback interface, on a
+  single port. Nothing on your network or the internet can reach it. It
+  does not create an account, collect analytics or send any usage data.

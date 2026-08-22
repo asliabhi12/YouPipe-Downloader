@@ -1,0 +1,44 @@
+Third-party software bundled with YouPiper Helper
+=================================================
+
+YouPiper Helper ships copies of the programs below so that nothing has to be
+installed separately. Each remains the work of its own authors and is covered by
+its own licence. Full licence texts accompany this file.
+
+
+yt-dlp
+------
+  Purpose  Reads media metadata and downloads media streams.
+  Licence  The Unlicense (public domain dedication).
+  Source   https://github.com/yt-dlp/yt-dlp
+  Notice   Bundled as the project's own standalone release build, unmodified.
+           Licence text: yt-dlp-LICENSE.txt
+
+
+FFmpeg (ffmpeg, ffprobe)
+------------------------
+  Purpose  Combines separate video and audio streams into one MP4 file, and
+           converts audio to MP3. ffprobe inspects the result.
+  Licence  GNU General Public License, version 2 or later (GPL-2.0-or-later).
+           The bundled builds are configured with --enable-gpl, which places
+           the whole build under the GPL rather than the LGPL.
+  Source   https://ffmpeg.org
+  Notice   Bundled unmodified. Licence text: GPL-2.0.txt
+
+  Written offer of source code
+    The GPL requires that anyone who receives these binaries can obtain the
+    corresponding source. The exact upstream build each copy came from, with its
+    SHA-256, is recorded in the vendor manifest used to assemble this release
+    (packaging/vendor/VERSIONS.txt and SHA256SUMS.lock in the YouPiper source
+    tree). FFmpeg source for any version is available from https://ffmpeg.org
+    and https://git.ffmpeg.org/ffmpeg.git.
+
+  Not included
+    No build configured with --enable-nonfree is used or may be used here; such
+    builds may not be redistributed at all.
+
+
+YouPiper Helper itself
+----------------------
+  The Helper is a small program that exposes a loopback-only HTTP API and drives
+  the tools above. It contains no third-party Go dependencies.

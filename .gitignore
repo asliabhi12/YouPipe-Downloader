@@ -1,5 +1,7 @@
 # Binaries and executables
-agent
+# Anchored: a bare "agent" would also ignore local/cmd/agent/, which is source.
+/agent
+/local/agent
 *.exe
 *.exe~
 *.dll
@@ -52,3 +54,8 @@ downloads/
 test_downloads/
 scratch/
 /server/tmp/
+
+# Bundled third-party binaries fetched by packaging/fetch-vendor.sh.
+# These are large, redistributable upstream releases; they are reproduced from
+# SHA256SUMS.lock rather than committed. Build outputs land in dist/ (above).
+/local/packaging/vendor/

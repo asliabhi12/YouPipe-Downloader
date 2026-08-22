@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>YouPiper Helper</string>
+	<key>CFBundleDisplayName</key>
+	<string>YouPiper Helper</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.youpiper.helper</string>
+	<key>CFBundleExecutable</key>
+	<string>youpiper-helper</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@@VERSION@@</string>
+	<key>CFBundleVersion</key>
+	<string>@@VERSION@@</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+
+	<!-- Background utility: no Dock icon, no menu bar, no window. The Helper has
+	     no interface of its own; the website is the interface. -->
+	<key>LSUIElement</key>
+	<true/>
+
+	<!-- Matches the deployment target the Go toolchain builds for. -->
+	<key>LSMinimumSystemVersion</key>
+	<string>12.0</string>
+
+	<key>NSHighResolutionCapable</key>
+	<true/>
+
+	<!-- No NSCamera/NSMicrophone/NSContacts/NSLocation usage descriptions and no
+	     app-sandbox entitlements requesting them: the Helper asks for no
+	     privacy-protected resources. It writes to the user's Downloads folder and
+	     talks to the loopback interface, nothing more. -->
+	<key>NSHumanReadableCopyright</key>
+	<string>@@COPYRIGHT@@</string>
+</dict>
+</plist>

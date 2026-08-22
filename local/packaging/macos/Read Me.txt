@@ -1,0 +1,47 @@
+YouPiper Helper
+===============
+
+WHAT IT DOES
+
+  Lets YouPiper save videos straight to this Mac instead of routing them
+  through a server, so downloads are faster and are not limited by anyone
+  else's bandwidth.
+
+
+INSTALL
+
+  1. Drag "YouPiper Helper" onto the Applications folder in this window.
+  2. Open it once from Applications.
+
+  That is the whole setup. From then on it starts by itself whenever you
+  log in and stays out of your way — no window, no Dock icon, no menu.
+
+  Then just open YouPiper in your browser. It finds the Helper on its own
+  and downloads go directly to your Downloads folder.
+
+
+IF MACOS SAYS IT CANNOT VERIFY THE DEVELOPER
+
+  Right-click "YouPiper Helper" in Applications, choose Open, then confirm.
+  You only have to do this the first time.
+
+
+TO REMOVE IT
+
+  Double-click "Uninstall YouPiper Helper" in this window.
+  Your downloaded files are never touched.
+
+
+WHAT IT INCLUDES
+
+  YouPiper Helper bundles everything it needs, so you do not have to
+  install anything else. See the Licenses folder inside the application
+  (right-click > Show Package Contents > Contents > Resources > Licenses)
+  for the third-party software it includes and the licences that cover it.
+
+
+PRIVACY AND NETWORK
+
+  The Helper listens only on this computer's own loopback interface, on a
+  single port. Nothing on your network or the internet can reach it. It
+  does not create an account, collect analytics or send any usage data.

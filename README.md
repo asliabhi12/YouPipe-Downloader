@@ -24,11 +24,12 @@ youpiper/
 ## Components
 
 ### 1. YouPiper Helper (`/local`)
-- **Tech Stack**: Go 1.22+
+- **Tech Stack**: Go 1.22+, no third-party modules
 - **Host**: `127.0.0.1:47821`
-- **Engine**: `yt-dlp` CLI + `FFmpeg`
+- **Engine**: `yt-dlp` CLI + `FFmpeg`, bundled inside distributed builds
 - **Output Directory**: `~/Downloads/YTD Local` — still carries the pre-rename name; see `local/README.md`
 - **Purpose**: Direct-to-disk local downloading without server bandwidth limits or queue delays.
+- **Distribution**: `local/packaging/` produces an installable `.app`/`.dmg` and `.exe`/`.zip` that start at login and need nothing else installed — see [local/packaging/PACKAGING.md](local/packaging/PACKAGING.md).
 
 ### 2. Online Server Backend (`/server`)
 - **Tech Stack**: Python 3.10+ / Flask
@@ -51,6 +52,8 @@ youpiper/
 - **Node.js** 18+ & **npm** (for web frontend)
 - **yt-dlp** and **FFmpeg** installed and accessible on system `PATH`
 
+These are development prerequisites. An end user installs none of them: the packaged Helper bundles `yt-dlp` and `FFmpeg`, and the online fallback needs nothing on the client.
+
 ---
 
 ### Running YouPiper Helper (Go)
@@ -58,6 +61,18 @@ youpiper/
 ```bash
 cd local
 go run ./cmd/agent
+```
+
+To see resolved tool paths and configuration:
+```bash
+cd local
+go run ./cmd/agent -status
+```
+
+To build the installable end-user artifacts:
+```bash
+cd local/packaging
+./fetch-vendor.sh && ./build.sh --windows
 ```
 
 To run test suite:
