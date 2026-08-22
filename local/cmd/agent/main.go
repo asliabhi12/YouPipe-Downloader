@@ -74,13 +74,17 @@ func main() {
 	log.Printf("Starting YouPiper Helper (v%s)...", server.ServerVersion)
 
 	dl := downloader.NewYTDLPDownloader()
-	ytdlp, ffmpeg := dl.CheckDependencies()
+	deps := dl.CheckDependencies()
 	logToolLocations(dl)
-	if !ytdlp {
+	if !deps.Ytdlp {
 		log.Println("WARNING: yt-dlp binary not found (bundled copy missing and none on PATH). Downloads will fail.")
 	}
-	if !ffmpeg {
+	if !deps.Ffmpeg {
 		log.Println("WARNING: ffmpeg binary not found (bundled copy missing and none on PATH). Merging and MP3 output will fail.")
+	}
+	if !deps.JSRuntime {
+		log.Println("WARNING: no JavaScript runtime found (bundled deno missing and none on PATH). YouTube will report no")
+		log.Println("         available formats, so every download will fail. /health reports this as degraded.")
 	}
 
 	// A packaged Helper registers itself the first time it runs. That is what
@@ -189,6 +193,7 @@ func logToolLocations(dl *downloader.YTDLPDownloader) {
 		{binpath.Ytdlp, dl.YtdlpPath},
 		{binpath.Ffmpeg, dl.FfmpegPath},
 		{binpath.Ffprobe, dl.FfprobePath},
+		{binpath.Deno, dl.DenoPath},
 	} {
 		if t.path == "" {
 			log.Printf("%s: not found", t.tool)
@@ -249,6 +254,7 @@ func writeToolStatus(w io.Writer, dl *downloader.YTDLPDownloader) {
 		{binpath.Ytdlp, dl.YtdlpPath},
 		{binpath.Ffmpeg, dl.FfmpegPath},
 		{binpath.Ffprobe, dl.FfprobePath},
+		{binpath.Deno, dl.DenoPath},
 	} {
 		if t.path == "" {
 			fmt.Fprintf(w, "%-8s NOT FOUND\n", t.tool+":")

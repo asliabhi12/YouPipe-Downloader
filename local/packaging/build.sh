@@ -18,6 +18,7 @@ cd "$(dirname "$0")"
 PKG="$PWD"
 ROOT="$(cd .. && pwd)"          # the Go module (local/)
 VENDOR="$PKG/vendor"
+LOCK="$VENDOR/SHA256SUMS.lock"
 DIST="$PKG/dist"
 
 APP_NAME="YouPiper Helper"
@@ -25,7 +26,7 @@ EXE_NAME="youpiper-helper"
 BUNDLE_ID="com.youpiper.helper"
 VERSION="$(awk -F'"' '/ServerVersion =/{print $2}' "$ROOT/internal/server/server.go")"
 [[ -n "$VERSION" ]] || { echo "error: could not read version from internal/server/server.go" >&2; exit 1; }
-COPYRIGHT="YouPiper. Bundles yt-dlp (Unlicense) and FFmpeg (GPL-2.0-or-later); see Licenses."
+COPYRIGHT="YouPiper. Bundles yt-dlp (Unlicense), FFmpeg (GPL-2.0-or-later) and Deno (MIT); see Licenses."
 
 # Packaged builds register themselves at login; development builds must not.
 LDFLAGS="-s -w -X ytd-local/internal/autostart.Packaged=true"
@@ -93,7 +94,7 @@ stage_tool() {
 # Licence texts a release must carry. BUNDLED-SOFTWARE.txt names both by
 # filename, and the bundled FFmpeg builds are GPL, so an artifact without them
 # is both a broken cross-reference and a licence violation.
-REQUIRED_LICENSES=(yt-dlp-LICENSE.txt GPL-2.0.txt)
+REQUIRED_LICENSES=(yt-dlp-LICENSE.txt GPL-2.0.txt deno-LICENSE.txt)
 
 stage_licenses() {
 	local dest="$1"
@@ -135,6 +136,10 @@ build_macos() {
 	stage_tool "$VENDOR/$platform/yt-dlp"  "$app/Contents/Resources/bin" yt-dlp  "$platform"
 	stage_tool "$VENDOR/$platform/ffmpeg"  "$app/Contents/Resources/bin" ffmpeg  "$platform"
 	stage_tool "$VENDOR/$platform/ffprobe" "$app/Contents/Resources/bin" ffprobe "$platform"
+	# The JavaScript runtime yt-dlp needs to solve YouTube's challenge scripts.
+	# Bundling it is what makes a login-started Helper work at all: launchd hands
+	# it PATH=/usr/bin:/bin:/usr/sbin:/sbin, where no runtime exists.
+	stage_tool "$VENDOR/$platform/deno"    "$app/Contents/Resources/bin" deno    "$platform"
 	stage_licenses "$app/Contents/Resources/Licenses"
 
 	sign_macos "$app"
@@ -241,6 +246,7 @@ build_windows() {
 	stage_tool "$VENDOR/$platform/yt-dlp.exe"  "$folder/bin" yt-dlp.exe  "$platform"
 	stage_tool "$VENDOR/$platform/ffmpeg.exe"  "$folder/bin" ffmpeg.exe  "$platform"
 	stage_tool "$VENDOR/$platform/ffprobe.exe" "$folder/bin" ffprobe.exe "$platform"
+	stage_tool "$VENDOR/$platform/deno.exe"    "$folder/bin" deno.exe    "$platform"
 	stage_licenses "$folder/Licenses"
 
 	cp "$PKG/windows/Install.cmd" "$folder/Install.cmd"
@@ -267,19 +273,64 @@ command -v go >/dev/null || { echo "error: go toolchain not found" >&2; exit 1; 
 # dist/ under names that look shippable.
 preflight() {
 	local absent=()
+	# deno is in this list for the same reason yt-dlp is: without it the Helper
+	# runs, answers, and cannot read a single video.
 	for arch in $ARCHES; do
-		for tool in yt-dlp ffmpeg ffprobe; do
+		for tool in yt-dlp ffmpeg ffprobe deno; do
 			[[ -f "$VENDOR/macos-$arch/$tool" ]] || absent+=("macos-$arch/$tool")
 		done
 	done
 	if [[ $DO_WINDOWS -eq 1 ]]; then
-		for tool in yt-dlp ffmpeg ffprobe; do
+		for tool in yt-dlp ffmpeg ffprobe deno; do
 			[[ -f "$VENDOR/windows-amd64/$tool.exe" ]] || absent+=("windows-amd64/$tool.exe")
 		done
 	fi
 	for lic in "${REQUIRED_LICENSES[@]}"; do
 		[[ -f "$VENDOR/LICENSES/$lic" ]] || absent+=("LICENSES/$lic")
 	done
+
+	# Every present file must still be the one that was pinned.
+	#
+	# fetch-vendor.sh verifies on download, but it installs a file before
+	# recording its hash — so an upstream that moved on leaves the new bytes on
+	# disk and stops at the lock check. Without this, the next build would stage
+	# that unreviewed binary under a release name and say nothing. Checking here
+	# costs one pass over four files and turns a silent substitution into a
+	# refusal.
+	# Only the files this run will stage: a Mac-only build has no business
+	# refusing over a Windows binary it will never touch.
+	local staged=()
+	for arch in $ARCHES; do
+		for tool in yt-dlp ffmpeg ffprobe deno; do staged+=("macos-$arch/$tool"); done
+	done
+	if [[ $DO_WINDOWS -eq 1 ]]; then
+		for tool in yt-dlp ffmpeg ffprobe deno; do staged+=("windows-amd64/$tool.exe"); done
+	fi
+
+	local drifted=()
+	if [[ -f "$LOCK" ]]; then
+		local rel want got
+		for rel in "${staged[@]}"; do
+			[[ -f "$VENDOR/$rel" ]] || continue
+			want="$(awk -v f="$rel" '$2 == f {print $1}' "$LOCK")"
+			[[ -n "$want" ]] || continue
+			got="$(shasum -a 256 "$VENDOR/$rel" | awk '{print $1}')"
+			[[ "$got" == "$want" ]] || drifted+=("$rel (locked ${want:0:12}…, on disk ${got:0:12}…)")
+		done
+	fi
+	if [[ ${#drifted[@]} -gt 0 ]]; then
+		echo "Vendor files no longer match vendor/SHA256SUMS.lock:" >&2
+		printf '  - %s\n' "${drifted[@]}" >&2
+		echo >&2
+		echo "Upstream published a new build and it is now on disk. Review the" >&2
+		echo "change and re-lock deliberately: remove the line from SHA256SUMS.lock" >&2
+		echo "and re-run fetch-vendor.sh. Do not ship an unreviewed binary." >&2
+		if [[ $DEV -eq 0 ]]; then
+			exit 1
+		fi
+		echo "Continuing because --dev was passed." >&2
+	fi
+
 	[[ ${#absent[@]} -eq 0 ]] && return 0
 
 	echo "Missing from the vendor tree:" >&2

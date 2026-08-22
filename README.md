@@ -44,6 +44,58 @@ youpiper/
 
 ---
 
+## Testing
+
+One command verifies everything that does not need a network, a running Helper or a browser:
+
+```bash
+./test.sh          # go vet, go test, go test -race, frontend tests, Astro production build
+./test.sh go       # Go only
+./test.sh web      # frontend tests and build only
+```
+
+The frontend suite (`web/tests/`) covers Helper health parsing, the availability state machine and its transitions, analyze/download backend selection, fallback routing, timeout behaviour and error-message translation. It runs on Node's built-in test runner with native TypeScript support, so it needs no test framework and no extra dependencies.
+
+`./test.sh` also runs the offline half of the bundled-runtime regression checks (`REG-JS-001`, `REG-JS-002`): that a JavaScript runtime is pinned for every platform, and that the installed application carries one and finds it without the developer's `PATH`.
+
+The rest of those checks need the network, the installed application and a real video. They drive the launchd-started Helper end to end — metadata, then 480p/720p/1080p/MP3 downloads, each verified with `ffprobe` rather than trusted because the job said "completed":
+
+```bash
+local/packaging/verify-runtime.sh              # REG-JS-001 … REG-JS-008
+local/packaging/verify-runtime.sh --offline    # only what needs nothing
+```
+
+Checks that need the real environment — a packaged Helper being started and stopped, a real video, a real browser — live in `web/tests/browser/helper_indicator.py` and are run by hand:
+
+```bash
+cd web && npm run dev          # terminal 1
+cd server && python3 app.py    # terminal 2
+python3 web/tests/browser/helper_indicator.py   # terminal 3 (restores the Helper on exit)
+```
+
+---
+
+## The Helper bundles its own JavaScript runtime
+
+YouTube will not serve a media stream until a JavaScript challenge has been
+solved, and `yt-dlp` solves it by running a script in an external JavaScript
+runtime that it looks for on `PATH`. launchd starts the Helper with
+`PATH=/usr/bin:/bin:/usr/sbin:/sbin`, which holds no runtime on a stock macOS
+install — so a Helper relying on `PATH` worked from a developer's shell and
+failed for every real user at login, reporting `/health` as `ok` the whole time.
+
+The packaged Helper now ships **Deno** in `Contents/Resources/bin` and names its
+absolute path on every `yt-dlp` call, so nothing depends on `PATH`. `/health`
+reports `js_runtime_available` and answers `degraded` without it, so "installed"
+and "able to download" can be told apart from outside. Details and the
+size/sandbox trade-off: [local/README.md](local/README.md) and
+[local/packaging/PACKAGING.md](local/packaging/PACKAGING.md).
+
+The end user still installs nothing: no Node, no Deno, no Python, no PATH
+changes, no Terminal.
+
+---
+
 ## Quick Start Guide
 
 ### Prerequisites

@@ -38,6 +38,25 @@ FFmpeg (ffmpeg, ffprobe)
     builds may not be redistributed at all.
 
 
+Deno
+----
+  Purpose  Runs the JavaScript that YouTube requires to be executed before it
+           will serve any playable media stream. yt-dlp calls it for this and
+           nothing else; without it YouTube offers no formats at all.
+  Licence  MIT License.
+  Source   https://github.com/denoland/deno
+  Notice   Bundled as the project's own release build, unmodified. The exact
+           version is recorded in the vendor manifest that assembled this
+           release. Licence text: deno-LICENSE.txt
+
+  Scope of what it runs
+    Deno is invoked only by yt-dlp, only to solve the challenge script YouTube
+    serves, and only with the restricted permissions yt-dlp gives it: the script
+    has no file system and no network access. It is not a general-purpose
+    runtime exposed to anything else, it does not listen on a port, and it is
+    not left running — it starts and exits inside a single yt-dlp invocation.
+
+
 YouPiper Helper itself
 ----------------------
   The Helper is a small program that exposes a loopback-only HTTP API and drives

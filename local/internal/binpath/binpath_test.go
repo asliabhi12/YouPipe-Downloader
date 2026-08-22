@@ -202,3 +202,81 @@ func TestAllRequiredToolsResolveFromBundle(t *testing.T) {
 		}
 	}
 }
+
+// launchdPATH is the PATH launchd hands a LaunchAgent on macOS. It is not
+// configurable per-user and holds no JavaScript runtime on a stock install,
+// which is why the runtime has to be bundled and found by path rather than
+// looked up.
+const launchdPATH = "/usr/bin:/bin:/usr/sbin:/sbin"
+
+// REG-JS-002 / REG-JS-003: the Helper must find its bundled JavaScript runtime
+// with only the environment launchd provides. This is the exact condition that
+// made the packaged Helper unable to read any video: it resolved nothing, and
+// yt-dlp's own PATH lookup found nothing either.
+func TestDenoResolvesFromBundleUnderLaunchdPATH(t *testing.T) {
+	bundle := t.TempDir()
+	bundled := writeTool(t, bundle, Deno)
+
+	t.Setenv("PATH", launchdPATH)
+	t.Setenv(EnvVar(Deno), "")
+
+	got := resolveIn(Deno, []string{bundle})
+	if got != bundled {
+		t.Fatalf("resolveIn(deno) = %q, want bundled %q", got, bundled)
+	}
+	if sourceIn(Deno, got, []string{bundle}) != "bundled" {
+		t.Errorf("resolved deno not reported as bundled")
+	}
+}
+
+// REG-JS-005 companion: with no bundled copy, the launchd environment yields
+// nothing at all. The Helper must be able to tell, so it can report itself
+// degraded rather than accepting downloads that cannot succeed.
+func TestDenoUnresolvedWhenNotBundledUnderLaunchdPATH(t *testing.T) {
+	t.Setenv("PATH", launchdPATH)
+	t.Setenv(EnvVar(Deno), "")
+
+	if got := resolveIn(Deno, []string{t.TempDir()}); got != "" {
+		t.Fatalf("resolveIn(deno) = %q, want empty: %s holds no JavaScript runtime", got, launchdPATH)
+	}
+}
+
+func TestDenoBundleWinsOverPath(t *testing.T) {
+	// A developer machine has deno on PATH. The packaged copy must still win, so
+	// that what ships is what runs.
+	bundle := t.TempDir()
+	pathDir := t.TempDir()
+	bundled := writeTool(t, bundle, Deno)
+	writeTool(t, pathDir, Deno)
+
+	t.Setenv("PATH", pathDir)
+	t.Setenv(EnvVar(Deno), "")
+
+	if got := resolveIn(Deno, []string{bundle}); got != bundled {
+		t.Fatalf("resolveIn(deno) = %q, want bundled %q", got, bundled)
+	}
+}
+
+func TestDenoHasEnvOverride(t *testing.T) {
+	if EnvVar(Deno) == "" {
+		t.Fatal("deno has no env override; an operator cannot point at their own runtime")
+	}
+}
+
+// Every tool a download depends on must come out of the bundle. deno is included
+// here deliberately: a bundle with yt-dlp and FFmpeg but no runtime looked
+// complete and could not read a single YouTube page.
+func TestAllDownloadToolsResolveFromBundle(t *testing.T) {
+	bundle := t.TempDir()
+	tools := []string{Ytdlp, Ffmpeg, Ffprobe, Deno}
+	for _, tool := range tools {
+		writeTool(t, bundle, tool)
+	}
+	t.Setenv("PATH", launchdPATH)
+	for _, tool := range tools {
+		t.Setenv(EnvVar(tool), "")
+		if got := resolveIn(tool, []string{bundle}); got == "" {
+			t.Errorf("%s not resolved from bundle", tool)
+		}
+	}
+}

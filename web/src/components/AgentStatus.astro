@@ -1,155 +1,176 @@
 ---
+// Helper availability indicator.
+//
+// It reads the shared store in lib/agent and never performs its own health
+// check, so what it shows and where requests actually go cannot disagree.
+//
+// This is meant to sit under the URL field and be readable at a glance before
+// the user does anything. An unavailable Helper is the normal state for most
+// visitors — the site works fine without it — so it is styled as information,
+// not as an error.
 ---
 
-<div id="agent-status-container" class="helper-status-wrapper">
-  <!-- Helper Ready Banner -->
-  <div id="helper-ready-card" class="helper-card helper-ready hidden">
-    <div class="status-left">
-      <span class="status-dot green"></span>
-      <span class="status-title">YouPiper Helper ready</span>
-    </div>
-    <span class="status-subtitle">Downloads go directly to your computer.</span>
-  </div>
-
-  <!-- Helper Promo Banner (when helper unavailable) -->
-  <div id="helper-promo-card" class="helper-card helper-promo hidden">
-    <div class="promo-left">
-      <div class="promo-title">⚡ Faster downloads with YouPiper Helper</div>
-      <div class="promo-subtitle">Download directly to your computer. No server queue.</div>
-    </div>
-    <a href="/helper" class="btn-install-helper">Install Helper</a>
-  </div>
+<div id="helper-indicator" class="helper-indicator" data-state="checking" aria-live="polite">
+  <span class="helper-dot" aria-hidden="true"></span>
+  <span class="helper-text">
+    <span class="helper-title" id="helper-indicator-title">Checking for YouPiper Helper…</span>
+    <span class="helper-detail" id="helper-indicator-detail">One moment.</span>
+  </span>
+  <a href="/helper" class="helper-cta" id="helper-indicator-cta">Get Helper</a>
 </div>
 
 <script>
-  import { checkAgent } from '../lib/agent';
+  import { helperStore, HELPER_COPY } from '../lib/agent';
 
-  async function updateStatus() {
-    const readyCard = document.getElementById('helper-ready-card');
-    const promoCard = document.getElementById('helper-promo-card');
+  const root = document.getElementById('helper-indicator');
+  const titleEl = document.getElementById('helper-indicator-title');
+  const detailEl = document.getElementById('helper-indicator-detail');
+  const ctaEl = document.getElementById('helper-indicator-cta');
 
-    if (!readyCard || !promoCard) return;
+  if (root && titleEl && detailEl && ctaEl) {
+    helperStore.subscribe((snapshot) => {
+      const copy = HELPER_COPY[snapshot.state];
+      root.dataset.state = snapshot.state;
+      titleEl.textContent = copy.title;
+      detailEl.textContent = copy.detail;
+      // Only pitch the Helper to someone who does not have it working. Nagging
+      // a user who already installed it is noise.
+      ctaEl.hidden = snapshot.state === 'available' || snapshot.state === 'checking';
+    });
 
-    const health = await checkAgent();
+    helperStore.start();
 
-    if (health && (health.status === 'ok' || health.status === 'degraded')) {
-      readyCard.classList.remove('hidden');
-      promoCard.classList.add('hidden');
-    } else {
-      readyCard.classList.add('hidden');
-      promoCard.classList.remove('hidden');
-    }
+    // Coming back to the tab is the moment a user is most likely to have just
+    // started the Helper, so check then instead of polling harder for it.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        helperStore.start();
+      } else {
+        helperStore.stop();
+      }
+    });
+    window.addEventListener('focus', () => void helperStore.refresh());
   }
-
-  updateStatus();
-  setInterval(updateStatus, 5000);
 </script>
 
 <style>
-  .helper-status-wrapper {
+  .helper-indicator {
     width: 100%;
-    margin: 16px 0;
-  }
-
-  .helper-card {
-    border-radius: var(--rounded-md);
-    padding: 12px 18px;
-    transition: all 0.2s ease;
-  }
-
-  .helper-card.helper-ready {
-    background-color: #f6ffed;
-    border: 1px solid #b7eb8f;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
+    padding: 10px 18px;
+    margin-top: 12px;
+    font-size: 13px;
+    border: 1px solid var(--color-hairline-soft);
+    border-radius: var(--rounded-full);
+    background-color: var(--color-surface-soft);
+    color: var(--color-muted);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
 
-  @media (max-width: 640px) {
-    .helper-card.helper-ready {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-  }
-
-  .status-left {
+  .helper-text {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
 
-  .status-dot {
+  .helper-title {
+    font-weight: 600;
+    color: var(--color-body);
+    white-space: nowrap;
+  }
+
+  .helper-detail {
+    color: var(--color-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Status is carried by a dot rather than by colouring the whole row, which
+     keeps the unavailable state from reading as a warning. */
+  .helper-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    display: inline-block;
     flex-shrink: 0;
+    background-color: transparent;
+    border: 1.5px solid var(--color-hairline);
   }
 
-  .status-dot.green {
+  .helper-indicator[data-state='available'] {
+    background-color: #f6ffed;
+    border-color: #d9f7be;
+  }
+
+  .helper-indicator[data-state='available'] .helper-dot {
     background-color: #52c41a;
+    border-color: #52c41a;
     box-shadow: 0 0 6px rgba(82, 196, 26, 0.5);
   }
 
-  .status-title {
-    font-size: 14px;
-    font-weight: 700;
+  .helper-indicator[data-state='available'] .helper-title {
     color: #135200;
   }
 
-  .status-subtitle {
-    font-size: 13px;
+  .helper-indicator[data-state='available'] .helper-detail {
     color: #237804;
   }
 
-  .helper-card.helper-promo {
-    background-color: #f9f9fb;
-    border: 1px solid var(--color-hairline);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+  .helper-indicator[data-state='checking'] .helper-dot {
+    animation: helper-pulse 1.2s ease-in-out infinite;
   }
 
-  @media (max-width: 640px) {
-    .helper-card.helper-promo {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
+  @keyframes helper-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
     }
   }
 
-  .promo-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--color-ink);
+  @media (prefers-reduced-motion: reduce) {
+    .helper-indicator[data-state='checking'] .helper-dot {
+      animation: none;
+    }
   }
 
-  .promo-subtitle {
-    font-size: 13px;
-    color: var(--color-muted);
-    margin-top: 2px;
-  }
-
-  .btn-install-helper {
-    background-color: var(--color-ink);
-    color: #ffffff;
-    font-size: 13px;
+  .helper-cta {
     font-weight: 600;
-    padding: 7px 14px;
-    border-radius: var(--rounded-sm);
-    text-decoration: none;
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
     white-space: nowrap;
-    transition: background-color 0.2s ease;
+    flex-shrink: 0;
   }
 
-  .btn-install-helper:hover {
-    background-color: #000000;
+  .helper-cta:hover {
+    color: var(--color-primary);
   }
 
-  .hidden {
-    display: none !important;
+  .helper-cta[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .helper-indicator {
+      border-radius: var(--rounded-md);
+      align-items: flex-start;
+    }
+
+    .helper-text {
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .helper-title,
+    .helper-detail {
+      white-space: normal;
+    }
   }
 </style>

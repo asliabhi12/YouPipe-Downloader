@@ -121,19 +121,28 @@ func writeError(w http.ResponseWriter, status int, errCode string, details strin
 	})
 }
 
+// handleHealth answers "can this Helper actually complete a download?", not
+// merely "is it running?".
+//
+// js_runtime_available is reported alongside the two older fields and folded into
+// status. Folding it in is what makes the answer honest for clients that predate
+// the field: a Helper with no JavaScript runtime is installed but cannot read a
+// single YouTube page, and reporting status "ok" in that state is what previously
+// let the website offer local downloads that could only ever fail.
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	ytdlp, ffmpeg := s.dl.CheckDependencies()
+	deps := s.dl.CheckDependencies()
 
 	statusStr := "ok"
-	if !ytdlp || !ffmpeg {
+	if !deps.Ready() {
 		statusStr = "degraded"
 	}
 
 	resp := map[string]interface{}{
-		"status":           statusStr,
-		"version":          ServerVersion,
-		"ytdlp_available":  ytdlp,
-		"ffmpeg_available": ffmpeg,
+		"status":               statusStr,
+		"version":              ServerVersion,
+		"ytdlp_available":      deps.Ytdlp,
+		"ffmpeg_available":     deps.Ffmpeg,
+		"js_runtime_available": deps.JSRuntime,
 	}
 
 	writeJSON(w, http.StatusOK, resp)
@@ -155,6 +164,14 @@ func (s *Server) handleMetadata(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, downloader.ErrYtdlpMissing) {
 			writeError(w, http.StatusServiceUnavailable, "yt_dlp_missing", "yt-dlp executable not found")
+			return
+		}
+		// A named reason beats letting yt-dlp exit 1 and calling it
+		// metadata_failed: this one is a broken installation, not a video the
+		// Helper could not read, and only the first of those is worth retrying
+		// somewhere else.
+		if errors.Is(err, downloader.ErrJSRuntimeMissing) {
+			writeError(w, http.StatusServiceUnavailable, "js_runtime_missing", "bundled JavaScript runtime not found")
 			return
 		}
 		if errors.Is(err, downloader.ErrInvalidURL) {

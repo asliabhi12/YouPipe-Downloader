@@ -21,6 +21,69 @@ Distributed builds bundle `yt-dlp`, `ffmpeg` and `ffprobe` inside the artifact, 
 
 `internal/binpath` resolves each tool in this order — bundled copy beside the executable, then `PATH`, with `YOUPIPER_YTDLP` / `YOUPIPER_FFMPEG` / `YOUPIPER_FFPROBE` overriding both for testing. `-status` prints which source won.
 
+### The JavaScript runtime: why one is bundled
+
+YouTube will not hand out format URLs until a per-request JavaScript challenge
+(the "n challenge") has been solved. `yt-dlp` solves it by running a script in an
+external JavaScript runtime — `deno`, `node`, `bun` or `quickjs` — which it looks
+for on `PATH` by default.
+
+That default is what broke every local download in the packaged Helper. launchd
+starts a LaunchAgent with a fixed, minimal `PATH`:
+
+```
+$ ps eww <helper pid> | tr ' ' '\n' | grep ^PATH=
+PATH=/usr/bin:/bin:/usr/sbin:/sbin          # no JavaScript runtime here, ever
+```
+
+A Helper started from a developer's shell inherits a `PATH` containing
+`/usr/local/bin` and works. The same binary started at login by launchd did not,
+and every `/metadata` and `/downloads` call failed:
+
+```
+[debug] JS runtimes: none
+[youtube] [jsc] JS Challenge Providers: bun (unavailable), deno (unavailable),
+                                        node (unavailable), quickjs (unavailable)
+WARNING: n challenge solving failed
+ERROR: No video formats found!            -> exit status 1 -> metadata_failed
+```
+
+Two things fix it, and both are in place.
+
+**Deno is bundled** at `Contents/Resources/bin/deno`, beside `yt-dlp`, fetched by
+`packaging/fetch-vendor.sh` at a pinned version and verified against Deno's own
+published SHA-256. `binpath` resolves it exactly like the other tools — bundled
+copy first, `PATH` only as a development fallback — and every `yt-dlp` invocation
+names its absolute location:
+
+```
+--js-runtimes deno:/Applications/YouPiper Helper.app/Contents/Resources/bin/deno
+```
+
+Nothing modifies `PATH`, for the Helper or for its children. Discovery is by
+absolute path, so what shipped is what runs, and the Helper behaves identically
+at login and from a shell. `packaging/PACKAGING.md` records why Deno rather than
+the ~1 MB QuickJS.
+
+**`/health` reports it.** `CheckDependencies` returns a `Dependencies` value
+whose `Ready()` requires all three of yt-dlp, FFmpeg and the runtime, and the
+endpoint publishes the third alongside the two older fields:
+
+```json
+{"status":"ok","version":"0.1.0","ytdlp_available":true,
+ "ffmpeg_available":true,"js_runtime_available":true}
+```
+
+A Helper missing the runtime answers `"status":"degraded"`, which is what stops
+the website offering local downloads that could only fail. This matters
+independently of bundling: it is what turns a silent failure into a visible one.
+`/metadata` and `/downloads` also refuse up front with `js_runtime_missing`
+rather than running yt-dlp and reporting whatever exit status came back.
+
+The regression checks for all of this — including real downloads through the
+installed application, started by launchd — are
+`packaging/verify-runtime.sh` (`REG-JS-001` … `REG-JS-008`).
+
 ## How to Run
 
 ```bash

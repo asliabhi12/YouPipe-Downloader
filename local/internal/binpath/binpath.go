@@ -1,5 +1,6 @@
 // Package binpath locates the external binaries the Helper drives: yt-dlp,
-// ffmpeg and ffprobe.
+// ffmpeg, ffprobe and the JavaScript runtime yt-dlp needs to solve YouTube's
+// challenge scripts.
 //
 // A packaged Helper ships its own copies so the user never has to install
 // anything, which means bundled binaries must win over whatever happens to be
@@ -20,6 +21,9 @@ const (
 	Ytdlp   = "yt-dlp"
 	Ffmpeg  = "ffmpeg"
 	Ffprobe = "ffprobe"
+	// Deno is the JavaScript runtime yt-dlp uses to run YouTube's challenge
+	// solver scripts. Without one, YouTube returns no playable formats.
+	Deno = "deno"
 )
 
 // EnvVar returns the environment variable that force-selects a tool's path,
@@ -33,6 +37,8 @@ func EnvVar(tool string) string {
 		return "YOUPIPER_FFMPEG"
 	case Ffprobe:
 		return "YOUPIPER_FFPROBE"
+	case Deno:
+		return "YOUPIPER_DENO"
 	}
 	return ""
 }

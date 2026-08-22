@@ -25,17 +25,22 @@ import DownloadProgress from './DownloadProgress.astro';
       />
     </div>
     <button type="submit" id="btn-analyze" class="search-orb" title="Analyze Video">
-      <span class="btn-text">Analyze</span>
+      <span class="btn-text">Analyze video</span>
     </button>
   </form>
 
-  <!-- Error Message Container -->
+  <!-- Helper availability. Sits here, outside the results block, so it is
+       readable on page load rather than only after an analysis succeeds. -->
+  <AgentStatus />
+
+  <!-- Notice (something worth knowing, e.g. a fallback) vs. error (the thing
+       the user asked for did not happen). They look different on purpose. -->
+  <div id="downloader-notice" class="notice-banner hidden"></div>
   <div id="downloader-error" class="error-banner hidden"></div>
 
   <!-- Analysis Results Section -->
   <div id="analysis-results" class="analysis-container hidden">
     <VideoInfo />
-    <AgentStatus />
     <FormatList />
   </div>
 
@@ -44,7 +49,17 @@ import DownloadProgress from './DownloadProgress.astro';
 </div>
 
 <script>
-  import { analyze, download, getStatus, getFile, isHelperAvailable, QUALITY_SHORT_LABELS, getResolutionText } from '../lib/agent';
+  import {
+    analyze,
+    download,
+    getStatus,
+    getFile,
+    helperStore,
+    friendlyJobError,
+    MESSAGE_HELPER_CONNECTION_LOST,
+    QUALITY_SHORT_LABELS,
+    getResolutionText
+  } from '../lib/agent';
 
   let currentUrl = '';
   let activeJobId = '';
@@ -53,12 +68,16 @@ import DownloadProgress from './DownloadProgress.astro';
   let isStartingJob = false;
   let activeDownloadingBtn: HTMLButtonElement | null = null;
   let activeBtnOriginalText = '';
+  // Which backend the currently rendered format rows are labelled for. Kept so
+  // the labels can follow a Helper that starts or stops after an analysis.
+  let renderedBackend: 'local' | 'online' = 'online';
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('downloader-url-form');
     const input = document.getElementById('url-input') as HTMLInputElement;
     const btnAnalyze = document.getElementById('btn-analyze');
     const errorBanner = document.getElementById('downloader-error');
+    const noticeBanner = document.getElementById('downloader-notice');
     const analysisContainer = document.getElementById('analysis-results');
     const progressContainer = document.getElementById('progress-container');
 
@@ -71,7 +90,7 @@ import DownloadProgress from './DownloadProgress.astro';
     const completedMessageText = document.getElementById('completed-message-text');
     const btnSaveFile = document.getElementById('btn-save-file');
 
-    if (!form || !input || !btnAnalyze || !errorBanner || !analysisContainer || !progressContainer) return;
+    if (!form || !input || !btnAnalyze || !errorBanner || !noticeBanner || !analysisContainer || !progressContainer) return;
 
     function showError(msg: string) {
       errorBanner.textContent = msg;
@@ -82,13 +101,25 @@ import DownloadProgress from './DownloadProgress.astro';
       errorBanner.classList.add('hidden');
     }
 
+    function showNotice(msg: string) {
+      noticeBanner.textContent = msg;
+      noticeBanner.classList.remove('hidden');
+    }
+
+    function hideNotice() {
+      noticeBanner.classList.add('hidden');
+    }
+
+    /** The subtle "where will this download come from" tag on each row. */
+    function backendHintMarkup(isHelper: boolean): string {
+      return isHelper
+        ? '<span class="backend-hint local">⚡ Local</span>'
+        : '<span class="backend-hint online">Online</span>';
+    }
+
     function videoRowMarkup(quality: string, height?: number, isHelper: boolean = false): string {
       const shortLabel = QUALITY_SHORT_LABELS[quality] || quality;
       const resolution = getResolutionText(height, quality);
-      const btnLabel = isHelper ? '⚡ Download' : 'Download';
-      const iconSvg = isHelper
-        ? `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`
-        : `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
 
       return `
         <div class="format-card" data-quality="${quality}">
@@ -97,20 +128,16 @@ import DownloadProgress from './DownloadProgress.astro';
             <span class="quality-label">${shortLabel}</span>
             ${resolution ? `<span class="resolution-tag">${resolution}</span>` : ''}
             <span class="container-badge">MP4</span>
+            ${backendHintMarkup(isHelper)}
           </div>
           <button type="button" class="btn-download-format" data-quality="${quality}">
-            ${iconSvg}
-            <span class="btn-text-content">${btnLabel}</span>
+            <svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span class="btn-text-content">Download</span>
           </button>
         </div>`;
     }
 
     function audioRowMarkup(isHelper: boolean = false): string {
-      const btnLabel = isHelper ? '⚡ Download' : 'Download';
-      const iconSvg = isHelper
-        ? `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`
-        : `<svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
-
       return `
         <div class="format-card audio-card" data-quality="audio">
           <div class="format-main-info">
@@ -118,32 +145,61 @@ import DownloadProgress from './DownloadProgress.astro';
             <span class="quality-badge">MP3</span>
             <span class="quality-label">Audio only</span>
             <span class="container-badge">MP3</span>
+            ${backendHintMarkup(isHelper)}
           </div>
           <button type="button" class="btn-download-format" data-quality="audio">
-            ${iconSvg}
-            <span class="btn-text-content">${btnLabel}</span>
+            <svg class="dl-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span class="btn-text-content">Download</span>
           </button>
         </div>`;
     }
+
+    // Keep the row tags honest when the Helper starts or stops while results are
+    // on screen. Only genuine transitions relabel: a fallback may have rendered
+    // "Online" rows while the Helper is still up, and re-asserting "Local" over
+    // them would contradict where the request actually went. Only the tags are
+    // rewritten — re-rendering the rows would wipe the state of a download
+    // button that is mid-job.
+    let lastHelperState: string | null = null;
+    helperStore.subscribe((snapshot) => {
+      if (snapshot.state === 'checking') return;
+      const previous = lastHelperState;
+      lastHelperState = snapshot.state;
+      if (previous === null || previous === snapshot.state) return;
+
+      const isHelper = snapshot.state === 'available';
+      renderedBackend = isHelper ? 'local' : 'online';
+      analysisContainer.querySelectorAll('.backend-hint').forEach((el) => {
+        el.className = `backend-hint ${isHelper ? 'local' : 'online'}`;
+        el.textContent = isHelper ? '⚡ Local' : 'Online';
+      });
+    });
 
     // Form submission: Analyze
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
+      hideNotice();
       currentUrl = input.value.trim();
       if (!currentUrl) return;
 
       btnAnalyze.setAttribute('disabled', 'true');
-      btnAnalyze.innerHTML = '<span class="spinner"></span>';
+      btnAnalyze.innerHTML = '<span class="spinner"></span><span class="btn-text">Analyzing…</span>';
 
       try {
         const meta = await analyze(currentUrl);
-        await renderMetadata(meta);
+        renderMetadata(meta);
+        // analyze() may have quietly covered for the Helper. Say so rather than
+        // letting the row tags flip to "Online" with no explanation.
+        if (meta.notice) showNotice(meta.notice);
       } catch (err: any) {
-        showError(err.message || 'Failed to analyze URL. Please check the URL and try again.');
+        // The sentence on the error is already written for a person; the code
+        // and backend detail stay in the console.
+        console.error('[youpiper] analyze failed:', err);
+        showError(err?.message || 'We could not analyze this video. Please check the link and try again.');
       } finally {
         btnAnalyze.removeAttribute('disabled');
-        btnAnalyze.innerHTML = '<span class="btn-text">Analyze</span>';
+        btnAnalyze.innerHTML = '<span class="btn-text">Analyze video</span>';
       }
     });
 
@@ -159,7 +215,7 @@ import DownloadProgress from './DownloadProgress.astro';
       startJob(currentUrl, quality, btn);
     });
 
-    async function renderMetadata(meta: any) {
+    function renderMetadata(meta: any) {
       analysisContainer.classList.remove('hidden');
 
       const thumb = analysisContainer.querySelector('.thumbnail-img') as HTMLImageElement;
@@ -177,8 +233,11 @@ import DownloadProgress from './DownloadProgress.astro';
         duration.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
       }
 
-      const helperReady = await isHelperAvailable();
+      // Label the rows for the backend that just answered, rather than asking
+      // about Helper availability a second time.
+      const helperReady = meta.backend === 'local';
       activeBackend = helperReady ? 'local' : 'online';
+      renderedBackend = activeBackend;
 
       const videoContainer = analysisContainer.querySelector('#video-format-rows');
       const audioContainer = analysisContainer.querySelector('#audio-format-rows');
@@ -222,9 +281,16 @@ import DownloadProgress from './DownloadProgress.astro';
       }
 
       try {
+        const expectedBackend = renderedBackend;
         const res = await download(url, quality);
         activeJobId = res.job_id;
         activeBackend = res.backend;
+
+        // The row promised a local download and it ended up online. Say so
+        // instead of silently changing where the file comes from.
+        if (expectedBackend === 'local' && res.backend === 'online') {
+          showNotice('YouPiper Helper could not take this download, so we used the online downloader instead.');
+        }
 
         if (qualityTag) qualityTag.textContent = quality === 'audio' ? 'mp3' : quality;
         progressContainer.classList.remove('hidden');
@@ -241,7 +307,8 @@ import DownloadProgress from './DownloadProgress.astro';
 
         startPolling(activeJobId, activeBackend);
       } catch (err: any) {
-        showError(err.message || 'Failed to start download job.');
+        console.error('[youpiper] starting the download failed:', err);
+        showError(err?.message || 'We could not start that download. Please try again.');
         if (btnElement) {
           btnElement.disabled = false;
           const labelEl = btnElement.querySelector('.btn-text-content');
@@ -255,9 +322,17 @@ import DownloadProgress from './DownloadProgress.astro';
     function startPolling(jobId: string, backend: 'local' | 'online') {
       if (pollInterval) clearInterval(pollInterval);
 
+      // A single failed poll is a hiccup; several in a row on a local job means
+      // the Helper went away mid-download. That has to be reported — the file is
+      // very likely incomplete, and leaving the bar spinning would imply
+      // otherwise.
+      let consecutiveFailures = 0;
+      const maxConsecutiveFailures = 4;
+
       pollInterval = setInterval(async () => {
         try {
           const job = await getStatus(jobId, backend);
+          consecutiveFailures = 0;
           updateProgressUI(job);
 
           if (['completed', 'failed', 'cancelled'].includes(job.status)) {
@@ -265,7 +340,34 @@ import DownloadProgress from './DownloadProgress.astro';
             pollInterval = null;
           }
         } catch (err) {
-          console.error('Polling error:', err);
+          consecutiveFailures++;
+          console.error(
+            `[youpiper] progress poll failed (${consecutiveFailures}/${maxConsecutiveFailures}):`,
+            err
+          );
+          if (consecutiveFailures < maxConsecutiveFailures) return;
+
+          clearInterval(pollInterval);
+          pollInterval = null;
+
+          if (backend === 'local') {
+            void helperStore.refresh();
+            showError(MESSAGE_HELPER_CONNECTION_LOST);
+          } else {
+            showError('We lost track of that download. Please try again.');
+          }
+
+          if (statusPill) {
+            statusPill.className = 'status-pill failed';
+            statusPill.textContent = 'failed';
+          }
+          if (progressMetricsText) progressMetricsText.textContent = 'Connection lost';
+          if (progressBarFill) progressBarFill.style.backgroundColor = '#cf1322';
+          if (activeDownloadingBtn) {
+            activeDownloadingBtn.disabled = false;
+            const labelEl = activeDownloadingBtn.querySelector('.btn-text-content');
+            if (labelEl && activeBtnOriginalText) labelEl.textContent = activeBtnOriginalText;
+          }
         }
       }, 750);
     }
@@ -308,8 +410,17 @@ import DownloadProgress from './DownloadProgress.astro';
           }
         }
       } else if (job.status === 'failed') {
-        progressMetricsText.textContent = job.error || 'Download failed';
+        // job.error is "<code>: <detail>" — the code is mapped for the user and
+        // the whole thing kept in the console.
+        console.error(`[youpiper] job ${job.job_id} failed on the ${job.backend} backend:`, job.error);
+        const message = friendlyJobError(job.error, job.backend);
+        progressMetricsText.textContent = message;
         progressBarFill.style.backgroundColor = '#cf1322';
+        showError(
+          job.backend === 'local'
+            ? `${message} You can also try again without YouPiper Helper by quitting it.`
+            : message
+        );
         if (activeDownloadingBtn) {
           activeDownloadingBtn.disabled = false;
           const labelEl = activeDownloadingBtn.querySelector('.btn-text-content');
@@ -433,6 +544,8 @@ import DownloadProgress from './DownloadProgress.astro';
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
     transition: background-color 0.2s ease;
   }
 
@@ -450,6 +563,43 @@ import DownloadProgress from './DownloadProgress.astro';
     border-radius: var(--rounded-sm);
     margin-bottom: 24px;
     text-align: center;
+  }
+
+  /* A notice is "here is what happened", not "something broke" — so it is
+     informational blue rather than the error red above. */
+  .notice-banner {
+    width: 100%;
+    padding: 12px 20px;
+    margin-top: 12px;
+    background-color: #f0f7ff;
+    border: 1px solid #bcdcff;
+    color: #0b4a86;
+    font-size: 14px;
+    border-radius: var(--rounded-sm);
+    text-align: center;
+  }
+
+  /* Which backend a row will use. Subtle by design: the system has already
+     chosen, and this is a note, not a control. */
+  :global(.backend-hint) {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  :global(.backend-hint.local) {
+    color: #237804;
+    background-color: #f6ffed;
+    border: 1px solid #d9f7be;
+  }
+
+  :global(.backend-hint.online) {
+    color: var(--color-muted);
+    background-color: var(--color-surface-soft);
+    border: 1px solid var(--color-hairline-soft);
   }
 
   .analysis-container {

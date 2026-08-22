@@ -19,13 +19,14 @@ import (
 
 // Common errors
 var (
-	ErrInvalidURL     = errors.New("invalid_url")
-	ErrYtdlpMissing   = errors.New("yt_dlp_missing")
-	ErrFfmpegMissing  = errors.New("ffmpeg_missing")
-	ErrMetadataFailed = errors.New("metadata_failed")
-	ErrDownloadFailed = errors.New("download_failed")
-	ErrCancelled      = errors.New("cancelled")
-	ErrFileNotFound   = errors.New("file_not_found")
+	ErrInvalidURL       = errors.New("invalid_url")
+	ErrYtdlpMissing     = errors.New("yt_dlp_missing")
+	ErrFfmpegMissing    = errors.New("ffmpeg_missing")
+	ErrJSRuntimeMissing = errors.New("js_runtime_missing")
+	ErrMetadataFailed   = errors.New("metadata_failed")
+	ErrDownloadFailed   = errors.New("download_failed")
+	ErrCancelled        = errors.New("cancelled")
+	ErrFileNotFound     = errors.New("file_not_found")
 )
 
 type Format struct {
@@ -51,16 +52,36 @@ type Progress struct {
 	ETA             int64   `json:"eta"`      // seconds
 }
 
+// Dependencies reports which external tools the Helper was able to locate.
+//
+// A struct rather than a list of bools: the JS runtime is the third thing that
+// has to be present for a download to work, and three positional booleans at an
+// interface boundary is exactly the shape that gets transposed by accident.
+type Dependencies struct {
+	Ytdlp  bool
+	Ffmpeg bool
+	// JSRuntime is what separates "the Helper is installed" from "the Helper can
+	// actually read a YouTube page". yt-dlp needs a JavaScript runtime to solve
+	// YouTube's n challenge; without one every extraction ends in no formats.
+	JSRuntime bool
+}
+
+// Ready reports whether every tool needed to complete a download is present.
+func (d Dependencies) Ready() bool { return d.Ytdlp && d.Ffmpeg && d.JSRuntime }
+
 type Downloader interface {
 	Metadata(ctx context.Context, rawURL string) (*Metadata, error)
 	Download(ctx context.Context, rawURL string, quality string, outputDir string, progressCb func(Progress)) error
-	CheckDependencies() (ytdlp bool, ffmpeg bool)
+	CheckDependencies() Dependencies
 }
 
 type YTDLPDownloader struct {
 	YtdlpPath   string
 	FfmpegPath  string
 	FfprobePath string
+	// DenoPath is the JavaScript runtime handed to yt-dlp explicitly. It is
+	// never left to PATH: see jsRuntimeArgs.
+	DenoPath string
 }
 
 func NewYTDLPDownloader() *YTDLPDownloader {
@@ -68,6 +89,7 @@ func NewYTDLPDownloader() *YTDLPDownloader {
 		YtdlpPath:   binpath.Resolve(binpath.Ytdlp),
 		FfmpegPath:  binpath.Resolve(binpath.Ffmpeg),
 		FfprobePath: binpath.Resolve(binpath.Ffprobe),
+		DenoPath:    binpath.Resolve(binpath.Deno),
 	}
 }
 
@@ -97,7 +119,7 @@ func GetDefaultDownloadsDir() (string, error) {
 	return dir, nil
 }
 
-func (d *YTDLPDownloader) CheckDependencies() (bool, bool) {
+func (d *YTDLPDownloader) CheckDependencies() Dependencies {
 	if d.YtdlpPath == "" {
 		d.YtdlpPath = binpath.Resolve(binpath.Ytdlp)
 	}
@@ -107,7 +129,14 @@ func (d *YTDLPDownloader) CheckDependencies() (bool, bool) {
 	if d.FfprobePath == "" {
 		d.FfprobePath = binpath.Resolve(binpath.Ffprobe)
 	}
-	return d.YtdlpPath != "", d.FfmpegPath != ""
+	if d.DenoPath == "" {
+		d.DenoPath = binpath.Resolve(binpath.Deno)
+	}
+	return Dependencies{
+		Ytdlp:     d.YtdlpPath != "",
+		Ffmpeg:    d.FfmpegPath != "",
+		JSRuntime: d.DenoPath != "",
+	}
 }
 
 type ytdlpFormatRaw struct {
@@ -126,23 +155,51 @@ type ytdlpJSONRaw struct {
 	Formats   []ytdlpFormatRaw `json:"formats"`
 }
 
+// jsRuntimeArgs returns the flags that point yt-dlp at a specific JavaScript
+// runtime, or nothing when no runtime was found.
+//
+// yt-dlp discovers runtimes on PATH by default, and that default is the reason
+// the packaged Helper could not read a single video: launchd hands it
+// PATH=/usr/bin:/bin:/usr/sbin:/sbin, where no JavaScript runtime lives. Naming
+// the absolute path removes PATH from the question entirely, so the Helper
+// behaves the same at login as it does from a shell.
+//
+// Passing nothing when the path is empty is deliberate: `--js-runtimes deno:`
+// with an empty location is not the same as leaving the flag off, and a
+// development build with deno on PATH should still work.
+func jsRuntimeArgs(denoPath string) []string {
+	if denoPath == "" {
+		return nil
+	}
+	return []string{"--js-runtimes", binpath.Deno + ":" + denoPath}
+}
+
 func (d *YTDLPDownloader) Metadata(ctx context.Context, rawURL string) (*Metadata, error) {
 	if err := ValidateURL(rawURL); err != nil {
 		return nil, err
 	}
 
-	ytdlpAvail, _ := d.CheckDependencies()
-	if !ytdlpAvail {
+	deps := d.CheckDependencies()
+	if !deps.Ytdlp {
 		return nil, ErrYtdlpMissing
 	}
+	// Fail with the actual reason rather than letting yt-dlp exit 1 and reporting
+	// metadata_failed. Without a runtime YouTube yields no formats at all, so
+	// there is nothing to be gained by trying.
+	if !deps.JSRuntime {
+		return nil, ErrJSRuntimeMissing
+	}
 
-	cmd := exec.CommandContext(ctx, d.YtdlpPath,
+	args := []string{
 		"--dump-json",
 		"--no-warnings",
 		"--no-playlist",
 		"--extractor-args", "youtube:player_client=web_embedded",
-		rawURL,
-	)
+	}
+	args = append(args, jsRuntimeArgs(d.DenoPath)...)
+	args = append(args, rawURL)
+
+	cmd := exec.CommandContext(ctx, d.YtdlpPath, args...)
 
 	out, err := cmd.Output()
 	if err != nil {
@@ -279,9 +336,9 @@ func ffmpegLocation(ffmpegPath string) string {
 // buildDownloadArgs assembles the full yt-dlp argument list.
 //
 // Split out from Download so the flags that decide correctness — the extractor
-// client, the MP4/MP3 container contract, and the bundled-FFmpeg location — can
-// be asserted in tests without running a download.
-func buildDownloadArgs(rawURL, qClean, outputDir, ffmpegPath string) []string {
+// client, the MP4/MP3 container contract, and the bundled FFmpeg and JavaScript
+// runtime locations — can be asserted in tests without running a download.
+func buildDownloadArgs(rawURL, qClean, outputDir, ffmpegPath, denoPath string) []string {
 	args := []string{
 		"--newline",
 		"--no-playlist",
@@ -295,6 +352,10 @@ func buildDownloadArgs(rawURL, qClean, outputDir, ffmpegPath string) []string {
 	if loc := ffmpegLocation(ffmpegPath); loc != "" {
 		args = append(args, "--ffmpeg-location", loc)
 	}
+
+	// The same reasoning as --ffmpeg-location, for the runtime that decides
+	// whether YouTube offers any formats at all.
+	args = append(args, jsRuntimeArgs(denoPath)...)
 
 	// Distinct output template per quality to avoid filename collisions
 	outputTemplate := filepath.Join(outputDir, fmt.Sprintf("%%(title)s [%%(id)s] [%s].%%(ext)s", qClean))
@@ -332,12 +393,15 @@ func (d *YTDLPDownloader) Download(
 		return err
 	}
 
-	ytdlpAvail, ffmpegAvail := d.CheckDependencies()
-	if !ytdlpAvail {
+	deps := d.CheckDependencies()
+	if !deps.Ytdlp {
 		return ErrYtdlpMissing
 	}
-	if !ffmpegAvail {
+	if !deps.Ffmpeg {
 		return ErrFfmpegMissing
+	}
+	if !deps.JSRuntime {
+		return ErrJSRuntimeMissing
 	}
 
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
@@ -349,7 +413,7 @@ func (d *YTDLPDownloader) Download(
 		qClean = "best"
 	}
 
-	args := buildDownloadArgs(rawURL, qClean, outputDir, d.FfmpegPath)
+	args := buildDownloadArgs(rawURL, qClean, outputDir, d.FfmpegPath, d.DenoPath)
 
 	cmd := exec.CommandContext(ctx, d.YtdlpPath, args...)
 
