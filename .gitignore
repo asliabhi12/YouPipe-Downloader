@@ -59,3 +59,4 @@ scratch/
 # These are large, redistributable upstream releases; they are reproduced from
 # SHA256SUMS.lock rather than committed. Build outputs land in dist/ (above).
 /local/packaging/vendor/
+!/local/packaging/vendor/SHA256SUMS.lock
