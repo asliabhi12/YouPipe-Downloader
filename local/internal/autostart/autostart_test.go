@@ -233,3 +233,103 @@ func TestXMLEscape(t *testing.T) {
 		t.Fatalf("xmlEscape = %q, want %q", got, want)
 	}
 }
+
+// The bug these cover was found in the field: a Helper opened straight from a
+// mounted disk image registered a login item pointing into /Volumes, which
+// stopped resolving the moment the image was ejected. Because KeepAlive retries,
+// the result was a login item that failed silently and repeatedly forever.
+
+func TestStableLocationRejectsMountedVolume(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("/Volumes is a macOS path")
+	}
+	exe := "/Volumes/YouPiper Helper/YouPiper Helper.app/Contents/MacOS/youpiper-helper"
+	ok, why := StableLocation(exe)
+	if ok {
+		t.Fatalf("StableLocation(%q) = true, want false: a disk image is not an installation", exe)
+	}
+	if why == "" {
+		t.Fatal("StableLocation gave no reason; the log line would read badly")
+	}
+}
+
+func TestStableLocationRejectsAppTranslocation(t *testing.T) {
+	exe := "/private/var/folders/x1/AppTranslocation/9F2B-4C/d/YouPiper Helper.app/Contents/MacOS/youpiper-helper"
+	ok, why := StableLocation(exe)
+	if ok {
+		t.Fatalf("StableLocation(%q) = true, want false: translocated paths are discarded on quit", exe)
+	}
+	if why == "" {
+		t.Fatal("StableLocation gave no reason")
+	}
+}
+
+func TestStableLocationAcceptsInstalledPaths(t *testing.T) {
+	installed := []string{
+		"/Applications/YouPiper Helper.app/Contents/MacOS/youpiper-helper",
+		"/Users/someone/Applications/YouPiper Helper.app/Contents/MacOS/youpiper-helper",
+		`C:\Users\someone\AppData\Local\Programs\YouPiper Helper\YouPiper-Helper.exe`,
+	}
+	for _, exe := range installed {
+		if ok, why := StableLocation(exe); !ok {
+			t.Errorf("StableLocation(%q) = false (%s), want true", exe, why)
+		}
+	}
+}
+
+func TestRegisteredPathReadsBackWhatInstallWrote(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("LaunchAgent plists are macOS-only")
+	}
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	// A path with an ampersand exercises the escape/unescape round trip.
+	exe := filepath.Join(home, "Applications", "Rock & Roll.app", "Contents", "MacOS", "youpiper-helper")
+	plist, err := plistPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(plist), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(plist, []byte(plistContents(exe, filepath.Join(home, "log"))), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := RegisteredPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != exe {
+		t.Errorf("RegisteredPath() = %q, want %q", got, exe)
+	}
+}
+
+func TestRegisteredPathEmptyWhenNothingRegistered(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("LaunchAgent plists are macOS-only")
+	}
+	t.Setenv("HOME", t.TempDir())
+
+	got, err := RegisteredPath()
+	if err != nil {
+		t.Fatalf("RegisteredPath() on a clean home returned an error: %v", err)
+	}
+	if got != "" {
+		t.Errorf("RegisteredPath() = %q, want empty", got)
+	}
+}
+
+func TestXMLUnescapeRoundTrip(t *testing.T) {
+	for _, s := range []string{
+		`/Applications/Plain.app`,
+		`/Applications/Rock & Roll.app`,
+		`/Applications/<odd> "name" 'here'.app`,
+		`/Applications/Already &amp; escaped.app`,
+	} {
+		if got := xmlUnescape(xmlEscape(s)); got != s {
+			t.Errorf("round trip of %q gave %q", s, got)
+		}
+	}
+}

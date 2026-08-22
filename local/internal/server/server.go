@@ -269,9 +269,17 @@ func (s *Server) Start() error {
 		return fmt.Errorf("security error: server must bind to 127.0.0.1 (got %s)", s.addr)
 	}
 
+	// Bind before announcing it. Logging first would put a "listening" line in
+	// the log file even when the port is already taken, which is the one case
+	// where somebody is actually reading the log to find out what went wrong.
+	ln, err := net.Listen("tcp", s.addr)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("YouPiper Helper listening on http://%s", s.addr)
 	log.Printf("Default download directory: %s", s.outputDir)
-	return s.httpServer.ListenAndServe()
+	return s.httpServer.Serve(ln)
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {

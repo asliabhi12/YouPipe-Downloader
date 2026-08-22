@@ -108,7 +108,13 @@ build_macos() {
 	local arch="$1"
 	local platform="macos-$arch"
 	local work="$DIST/work-$platform"
-	local app="$work/$APP_NAME.app"
+	local suffix=""
+	[[ $DEV -eq 1 ]] && suffix="-dev-incomplete"
+	# The suffix goes on the bundle itself, not just on the copies in dist/. A
+	# disk image containing a plain "YouPiper Helper.app" is indistinguishable
+	# from a release once it is mounted, which is exactly how an incomplete build
+	# ends up being run and trusted.
+	local app="$work/$APP_NAME$suffix.app"
 
 	echo "==> macOS $arch"
 	rm -rf "$work"
@@ -133,8 +139,6 @@ build_macos() {
 
 	sign_macos "$app"
 
-	local suffix=""
-	[[ $DEV -eq 1 ]] && suffix="-dev-incomplete"
 	local dmg="$DIST/YouPiper-Helper-$VERSION-$arch$suffix.dmg"
 	local appout="$DIST/$APP_NAME$suffix.app"
 
@@ -151,7 +155,7 @@ build_macos() {
 	cp "$PKG/macos/Read Me.txt" "$dmgroot/Read Me.txt"
 
 	rm -f "$dmg"
-	if hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$dmgroot" \
+	if hdiutil create -quiet -volname "$APP_NAME$suffix" -srcfolder "$dmgroot" \
 		-ov -format UDZO "$dmg"; then
 		echo "  -> $dmg"
 	else

@@ -42,6 +42,38 @@ func Supported() bool {
 	return runtime.GOOS == "darwin" || runtime.GOOS == "windows"
 }
 
+// StableLocation reports whether execPath is somewhere a login item may safely
+// point at, and if not, a reason phrased for the log.
+//
+// Registering from a temporary location produces a login item that fails on
+// every attempt after the location disappears, and because KeepAlive retries,
+// it fails repeatedly and silently. Two cases matter in practice:
+//
+//   - Running straight out of a mounted disk image. The path under /Volumes
+//     stops existing the moment the image is ejected.
+//   - Gatekeeper's App Translocation. A quarantined app opened from a disk
+//     image is executed from a randomised read-only path containing
+//     "AppTranslocation" that is discarded when the app quits.
+//
+// In both cases the app has not been installed yet, so declining to register is
+// the correct answer rather than a compromise: the user is meant to copy it out
+// first, which is what the disk image's Applications shortcut is for.
+//
+// This is a path test, not a filesystem test. It deliberately does not try to
+// detect every read-only or removable mount — it covers the paths macOS
+// actually hands out for the uninstalled case.
+func StableLocation(execPath string) (bool, string) {
+	clean := filepath.ToSlash(filepath.Clean(execPath))
+
+	if strings.Contains(clean, "/AppTranslocation/") {
+		return false, "it is running from a temporary quarantine location"
+	}
+	if runtime.GOOS == "darwin" && strings.HasPrefix(clean, "/Volumes/") {
+		return false, "it is running from a mounted disk image or external volume"
+	}
+	return true, ""
+}
+
 // plistPath is the per-user LaunchAgent location on macOS.
 func plistPath() (string, error) {
 	home, err := os.UserHomeDir()
@@ -83,6 +115,18 @@ func xmlEscape(s string) string {
 		"'", "&apos;",
 	)
 	return r.Replace(s)
+}
+
+// xmlUnescape reverses xmlEscape. The ampersand entity is expanded last so that
+// an escaped literal like "&amp;lt;" survives the round trip intact.
+func xmlUnescape(s string) string {
+	r := strings.NewReplacer(
+		"&lt;", "<",
+		"&gt;", ">",
+		"&quot;", `"`,
+		"&apos;", "'",
+	)
+	return strings.ReplaceAll(r.Replace(s), "&amp;", "&")
 }
 
 // plistContents renders the LaunchAgent.
@@ -245,6 +289,64 @@ func PointsAt(execPath string) (bool, error) {
 		return strings.Contains(string(out), abs), nil
 	default:
 		return false, nil
+	}
+}
+
+// RegisteredPath returns the executable the login item currently points at, or
+// "" when nothing is registered.
+//
+// "Nothing registered" and "a different copy is registered" are very different
+// situations to be in — the second one means the copy that starts at login is
+// not the one being asked — so the two are worth telling apart in diagnostics.
+func RegisteredPath() (string, error) {
+	switch runtime.GOOS {
+	case "darwin":
+		plist, err := plistPath()
+		if err != nil {
+			return "", err
+		}
+		data, err := os.ReadFile(plist)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return "", nil
+			}
+			return "", err
+		}
+		// ProgramArguments holds exactly one string: the executable path.
+		const open, close = "<string>", "</string>"
+		body := string(data)
+		i := strings.Index(body, "<key>ProgramArguments</key>")
+		if i < 0 {
+			return "", nil
+		}
+		j := strings.Index(body[i:], open)
+		if j < 0 {
+			return "", nil
+		}
+		rest := body[i+j+len(open):]
+		k := strings.Index(rest, close)
+		if k < 0 {
+			return "", nil
+		}
+		return xmlUnescape(rest[:k]), nil
+	case "windows":
+		out, err := exec.Command("reg", "query", runKeyPath, "/v", runKeyName).CombinedOutput()
+		if err != nil {
+			return "", nil // not registered
+		}
+		// reg prints:  <name>    REG_SZ    <value>
+		for _, line := range strings.Split(string(out), "\n") {
+			if !strings.Contains(line, "REG_SZ") {
+				continue
+			}
+			_, value, ok := strings.Cut(line, "REG_SZ")
+			if ok {
+				return strings.TrimSpace(value), nil
+			}
+		}
+		return "", nil
+	default:
+		return "", nil
 	}
 }
 

@@ -13,13 +13,15 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"ytd-local/internal/binpath"
 )
 
 // Common errors
 var (
-	ErrInvalidURL    = errors.New("invalid_url")
-	ErrYtdlpMissing  = errors.New("yt_dlp_missing")
-	ErrFfmpegMissing = errors.New("ffmpeg_missing")
+	ErrInvalidURL     = errors.New("invalid_url")
+	ErrYtdlpMissing   = errors.New("yt_dlp_missing")
+	ErrFfmpegMissing  = errors.New("ffmpeg_missing")
 	ErrMetadataFailed = errors.New("metadata_failed")
 	ErrDownloadFailed = errors.New("download_failed")
 	ErrCancelled      = errors.New("cancelled")
@@ -56,16 +58,16 @@ type Downloader interface {
 }
 
 type YTDLPDownloader struct {
-	YtdlpPath  string
-	FfmpegPath string
+	YtdlpPath   string
+	FfmpegPath  string
+	FfprobePath string
 }
 
 func NewYTDLPDownloader() *YTDLPDownloader {
-	yPath, _ := exec.LookPath("yt-dlp")
-	fPath, _ := exec.LookPath("ffmpeg")
 	return &YTDLPDownloader{
-		YtdlpPath:  yPath,
-		FfmpegPath: fPath,
+		YtdlpPath:   binpath.Resolve(binpath.Ytdlp),
+		FfmpegPath:  binpath.Resolve(binpath.Ffmpeg),
+		FfprobePath: binpath.Resolve(binpath.Ffprobe),
 	}
 }
 
@@ -96,21 +98,16 @@ func GetDefaultDownloadsDir() (string, error) {
 }
 
 func (d *YTDLPDownloader) CheckDependencies() (bool, bool) {
-	ytdlp := d.YtdlpPath != ""
-	if !ytdlp {
-		if path, err := exec.LookPath("yt-dlp"); err == nil {
-			d.YtdlpPath = path
-			ytdlp = true
-		}
+	if d.YtdlpPath == "" {
+		d.YtdlpPath = binpath.Resolve(binpath.Ytdlp)
 	}
-	ffmpeg := d.FfmpegPath != ""
-	if !ffmpeg {
-		if path, err := exec.LookPath("ffmpeg"); err == nil {
-			d.FfmpegPath = path
-			ffmpeg = true
-		}
+	if d.FfmpegPath == "" {
+		d.FfmpegPath = binpath.Resolve(binpath.Ffmpeg)
 	}
-	return ytdlp, ffmpeg
+	if d.FfprobePath == "" {
+		d.FfprobePath = binpath.Resolve(binpath.Ffprobe)
+	}
+	return d.YtdlpPath != "", d.FfmpegPath != ""
 }
 
 type ytdlpFormatRaw struct {
@@ -265,6 +262,65 @@ func verifyOutputFileExists(outputDir string, qualityTag string) error {
 	return fmt.Errorf("%w: no completed file with quality [%s] found in %s", ErrFileNotFound, qualityTag, outputDir)
 }
 
+// ffmpegLocation returns the value for yt-dlp's --ffmpeg-location, or "" when
+// there is nothing to point at.
+//
+// The directory is passed rather than the ffmpeg binary itself: yt-dlp looks for
+// ffprobe alongside it, and probing is what tells it whether a merge is needed.
+// Passing just the ffmpeg path leaves ffprobe to be found on PATH, which on a
+// clean machine does not exist.
+func ffmpegLocation(ffmpegPath string) string {
+	if ffmpegPath == "" {
+		return ""
+	}
+	return filepath.Dir(ffmpegPath)
+}
+
+// buildDownloadArgs assembles the full yt-dlp argument list.
+//
+// Split out from Download so the flags that decide correctness — the extractor
+// client, the MP4/MP3 container contract, and the bundled-FFmpeg location — can
+// be asserted in tests without running a download.
+func buildDownloadArgs(rawURL, qClean, outputDir, ffmpegPath string) []string {
+	args := []string{
+		"--newline",
+		"--no-playlist",
+		"--extractor-args", "youtube:player_client=web_embedded",
+		"--progress-template", "%(progress.status)s|%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s|%(progress.speed)s|%(progress.eta)s",
+	}
+
+	// Without this a packaged Helper would ignore its own bundled FFmpeg and
+	// search PATH instead, so merging and MP3 extraction would fail on a machine
+	// where the user has installed nothing.
+	if loc := ffmpegLocation(ffmpegPath); loc != "" {
+		args = append(args, "--ffmpeg-location", loc)
+	}
+
+	// Distinct output template per quality to avoid filename collisions
+	outputTemplate := filepath.Join(outputDir, fmt.Sprintf("%%(title)s [%%(id)s] [%s].%%(ext)s", qClean))
+
+	if strings.EqualFold(qClean, "audio") {
+		// Audio extraction to MP3 via FFmpeg
+		args = append(args,
+			"-x",
+			"--audio-format", "mp3",
+			"--audio-quality", "0",
+			"-f", "bestaudio/best",
+			"-o", outputTemplate,
+			rawURL,
+		)
+	} else {
+		args = append(args,
+			"--merge-output-format", "mp4",
+			"-f", mapQualityToFormatFlag(qClean),
+			"-o", outputTemplate,
+			rawURL,
+		)
+	}
+
+	return args
+}
+
 func (d *YTDLPDownloader) Download(
 	ctx context.Context,
 	rawURL string,
@@ -293,36 +349,7 @@ func (d *YTDLPDownloader) Download(
 		qClean = "best"
 	}
 
-	var args []string
-	args = append(args,
-		"--newline",
-		"--no-playlist",
-		"--extractor-args", "youtube:player_client=web_embedded",
-		"--progress-template", "%(progress.status)s|%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s|%(progress.speed)s|%(progress.eta)s",
-	)
-
-	// Distinct output template per quality to avoid filename collisions
-	outputTemplate := filepath.Join(outputDir, fmt.Sprintf("%%(title)s [%%(id)s] [%s].%%(ext)s", qClean))
-
-	if strings.EqualFold(qClean, "audio") {
-		// Audio extraction to MP3 via FFmpeg
-		args = append(args,
-			"-x",
-			"--audio-format", "mp3",
-			"--audio-quality", "0",
-			"-f", "bestaudio/best",
-			"-o", outputTemplate,
-			rawURL,
-		)
-	} else {
-		formatArg := mapQualityToFormatFlag(qClean)
-		args = append(args,
-			"--merge-output-format", "mp4",
-			"-f", formatArg,
-			"-o", outputTemplate,
-			rawURL,
-		)
-	}
+	args := buildDownloadArgs(rawURL, qClean, outputDir, d.FfmpegPath)
 
 	cmd := exec.CommandContext(ctx, d.YtdlpPath, args...)
 

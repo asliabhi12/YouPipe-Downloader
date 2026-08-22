@@ -88,7 +88,10 @@ func main() {
 	// Development builds skip this so they never leave a login item pointing at
 	// a throwaway build directory.
 	if autostart.IsPackaged() && !*noStartupFlag {
-		if changed, err := autostart.EnsureInstalled(exe); err != nil {
+		if stable, why := autostart.StableLocation(exe); !stable {
+			log.Printf("Not registering to start at login because %s.", why)
+			log.Printf("Copy YouPiper Helper to your Applications folder and open it from there.")
+		} else if changed, err := autostart.EnsureInstalled(exe); err != nil {
 			log.Printf("Could not register at login: %v", err)
 		} else if changed {
 			log.Printf("Registered to start at login: %s", exe)
@@ -125,7 +128,12 @@ func main() {
 			// Expected whenever the user opens the app while the login-started
 			// copy is already running. Exit successfully so the system does not
 			// treat it as a crash and relaunch in a loop.
-			log.Printf("YouPiper Helper is already running on %s; this copy will exit.", *addrFlag)
+			//
+			// Whichever copy binds first keeps serving, so after replacing the
+			// app the old process is still the live one until it stops. Say so:
+			// otherwise an upgrade looks like it did nothing.
+			log.Printf("Another YouPiper Helper is already using %s, so this copy will exit.", *addrFlag)
+			log.Printf("The copy that is already running stays in charge until it is quit or you log in again.")
 		default:
 			log.Printf("Server stopped: %v", err)
 			os.Exit(1)
@@ -203,7 +211,20 @@ func printStatus(exe string) {
 		case registered:
 			fmt.Println("Start at login: yes")
 		default:
-			fmt.Println("Start at login: no")
+			// Distinguish "nothing is registered" from "a different copy is
+			// registered". The second means the copy that starts at login is not
+			// this one, which is the more confusing state to be in and the one
+			// worth naming.
+			other, _ := autostart.RegisteredPath()
+			if other != "" {
+				fmt.Println("Start at login: no — another copy is registered:")
+				fmt.Printf("                %s\n", other)
+			} else {
+				fmt.Println("Start at login: no")
+			}
+		}
+		if stable, why := autostart.StableLocation(exe); !stable {
+			fmt.Printf("                cannot register here: %s\n", why)
 		}
 	} else {
 		fmt.Println("Start at login: unsupported on this platform")

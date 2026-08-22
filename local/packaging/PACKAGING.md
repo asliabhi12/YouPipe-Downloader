@@ -124,11 +124,11 @@ builds cannot be redistributed at all.
 
 Licence texts and `BUNDLED-SOFTWARE.txt` are copied into every artifact.
 
-> **Not yet exercised.** `fetch-vendor.sh` has never been run — the build
-> environment has no network egress. Its URLs and asset names are written from
-> the publishers' documented release layouts but are **unverified**. Expect to
-> correct asset names on the first real run, and commit the resulting
-> `SHA256SUMS.lock`.
+> **Verified.** `fetch-vendor.sh` has been run successfully and a full release
+> build was produced from its output: all three tools bundled, both licence texts
+> present, `.dmg` and `.zip` created. `vendor/SHA256SUMS.lock` and
+> `vendor/VERSIONS.txt` record the exact builds and are committed — a later run
+> that returns different bytes fails loudly rather than updating silently.
 
 ---
 
@@ -258,51 +258,72 @@ Measured on macOS 15 (Darwin 25.5.0), Apple silicon, Go 1.26.6, from the
 | `.zip`, Windows, Helper + docs only | 2.6 MB |
 | Process start → exit (`-version`, 20 runs) | min 3.4 ms, median 4.1 ms, max 4.7 ms |
 | Full init: tool resolution + login-item check (`-status`, 20 runs) | min 6.5 ms, median 7.2 ms, max 8.3 ms |
+| **Resident memory, idle 24 min** | **9.5 MB** (RSS 9728 KB) |
+| **CPU, idle 24 min** | **0.0 %** |
 
-Adding the bundled tools takes an artifact to roughly 120–180 MB, almost all of
-it FFmpeg; a `--dev` `.app` with this machine's FFmpeg staged measured 124 MB.
-
-**Idle CPU and resident memory are not measured.** The build environment denies
-`bind()` on every loopback port, so the Helper cannot stay resident here long
-enough to sample. On a normal machine:
+Idle figures come from a real installed Helper that had been resident for 24
+minutes 33 seconds, sampled with:
 
 ```bash
 ps -o pid,rss,%cpu,etime,command -p "$(pgrep -f 'YouPiper Helper.app/Contents/MacOS/youpiper-helper')"
 ```
 
 While idle the process holds no timers and runs no polling loop — it blocks in
-`Serve` on the listener and in a channel receive for the shutdown signal — so
-idle CPU should read 0.0%. That is a structural expectation, **not** a
-measurement. Neither `yt-dlp` nor `ffmpeg` is kept running: each is spawned per
-download and exits with it.
+`Serve` on the listener and in a channel receive for the shutdown signal — which
+is what the 0.0 % reading reflects. Neither `yt-dlp` nor `ffmpeg` is kept
+running: each is spawned per download and exits with it.
+
+A complete release `.app` with all three tools bundled measures **167 MB**
+(ffmpeg 63 MB, ffprobe 63 MB, yt-dlp 35 MB), compressing to a **96 MB `.dmg`**;
+the Windows `.zip` is **129 MB**. Almost all of that is FFmpeg.
 
 ---
 
 ## 9. Test matrix
 
-Recorded on macOS 15 (Darwin 25.5.0, Apple silicon). No Windows hardware was
-available, and this environment denies loopback `bind()`, YouTube egress and
-`hdiutil`.
+macOS rows were run on macOS 15 (Darwin 25.5.0, Apple silicon) against a real
+release build. No Windows hardware was available.
 
 | # | Check | macOS | Windows |
 |---|---|---|---|
 | 1 | Builds from a clean tree | PASS | PASS (cross-compiled) |
-| 2 | Refuses a release build with tools missing | PASS | PASS |
+| 2 | Refuses a release build with tools/licences missing | PASS | PASS |
 | 3 | Bundle metadata valid (`plutil -lint`) | PASS | n/a |
-| 4 | Bundled tools resolve from inside the artifact | PASS (`-status`: ffmpeg, ffprobe → `bundled`) | PENDING (no host) |
-| 5 | No Dock icon / no console window | PASS (`LSUIElement`) | BUILD PASS, RUNTIME PENDING (`-H=windowsgui`) |
-| 6 | Registers at login on first packaged run | PENDING (needs a resident process) | PENDING (no host) |
+| 4 | Bundled tools resolve from inside the artifact | PASS (all three `(bundled)`) | PENDING (no host) |
+| 5 | No Dock icon / no console window | PASS (`LSUIElement`) | BUILD PASS, RUNTIME PENDING |
+| 6 | Registers at login on first packaged run | PASS (`launchctl print` shows the agent) | PENDING (no host) |
 | 7 | Dev build never registers at login | PASS (`Packaged: false`) | PASS |
-| 8 | Survives a reboot | PENDING | PENDING |
-| 9 | `GET /health` answers | BLOCKED (`bind`: operation not permitted) | PENDING |
-| 10 | Second instance exits without a crash loop | Code path covered; runtime PENDING (needs `bind`) | PENDING |
-| 11 | Real download → `.mp4` / `.mp3` | BLOCKED (no YouTube egress) | PENDING |
-| 12 | Astro site detects the Helper | BLOCKED (`bind`) | PENDING |
-| 13 | Disk image / archive builds | `.dmg` BLOCKED (`hdiutil`: Device not configured); `.app` PASS | `.zip` PASS |
-| 14 | Uninstall removes the startup entry, keeps downloads | Script reviewed; runtime PENDING | Script reviewed; runtime PENDING |
+| 8 | Declines to register from a disk image / translocated path | PASS (unit-tested; fixes an observed field failure) | PASS (unit-tested) |
+| 9 | `GET /health` answers on loopback | PASS | PENDING |
+| 10 | Second instance exits without a crash loop | PASS (logged and exited 0, first instance kept serving) | PENDING |
+| 11 | Survives a reboot | PENDING | PENDING |
+| 12 | Real download → `.mp4` / `.mp3` | PENDING | PENDING |
+| 13 | Astro site detects the Helper | PENDING | PENDING |
+| 14 | Disk image / archive builds | `.dmg` PASS (96 MB) | `.zip` PASS (129 MB) |
+| 15 | Uninstall removes the startup entry, keeps downloads | Script reviewed; runtime PENDING | Script reviewed; runtime PENDING |
 
-Rows 4, 6, 8–12 and 14 need one Mac and one PC outside this sandbox. Row 13's
-`.dmg` needs a machine where `hdiutil` can attach a disk device.
+Rows 11–13 and 15 remain, plus every Windows runtime row. Row 13 needs the Astro
+dev server pointed at a Helper that has yt-dlp bundled — not at an older
+instance still holding the port.
+
+### Field failure that produced row 8
+
+A Helper opened straight from a mounted disk image registered a login item
+pointing at `/Volumes/YouPiper Helper/…`. That path stops existing when the
+image is ejected, and because `KeepAlive` retries, the result is a login item
+that fails silently and repeatedly forever. Gatekeeper's App Translocation makes
+it worse for a *downloaded* image: the app runs from a randomised
+`…/AppTranslocation/<uuid>/d/…` path that is discarded when it quits.
+
+`autostart.StableLocation` now declines to register from either kind of path and
+logs why. Running from a disk image is not an installation, so declining is the
+correct answer, not a workaround — the image's `Applications` shortcut is how the
+user is meant to install.
+
+The same episode showed that whichever copy binds the port first keeps serving,
+so an older instance can silently outlive an upgrade. The `EADDRINUSE` log line
+now says that explicitly, and `-status` distinguishes "nothing registered" from
+"a *different* copy is registered" and prints that other path.
 
 ---
 
