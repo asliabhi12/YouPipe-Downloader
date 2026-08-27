@@ -33,22 +33,35 @@ type Job struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+const (
+	DefaultJobTTL          = 30 * time.Minute
+	DefaultCleanupInterval = 1 * time.Minute
+)
+
 type jobItem struct {
-	job    Job
-	ctx    context.Context
-	cancel context.CancelFunc
-	mu     sync.RWMutex
+	job        Job
+	ctx        context.Context
+	cancel     context.CancelFunc
+	finishedAt time.Time
+	mu         sync.RWMutex
 }
 
 type JobManager struct {
-	jobs map[string]*jobItem
-	mu   sync.RWMutex
+	jobs            map[string]*jobItem
+	mu              sync.RWMutex
+	stopCleanup     chan struct{}
+	cleanupDone     chan struct{}
+	stopCleanupOnce sync.Once
 }
 
 func NewJobManager() *JobManager {
-	return &JobManager{
-		jobs: make(map[string]*jobItem),
+	jm := &JobManager{
+		jobs:        make(map[string]*jobItem),
+		stopCleanup: make(chan struct{}),
+		cleanupDone: make(chan struct{}),
 	}
+	go jm.startCleanupLoop(DefaultJobTTL, DefaultCleanupInterval)
+	return jm
 }
 
 func generateUUID() string {
@@ -60,6 +73,55 @@ func generateUUID() string {
 	b[6] = (b[6] & 0x0f) | 0x40 // Version 4
 	b[8] = (b[8] & 0x3f) | 0x80 // Variant RFC 4122
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+}
+
+func (jm *JobManager) startCleanupLoop(ttl, interval time.Duration) {
+	defer close(jm.cleanupDone)
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			jm.CleanupStale(ttl)
+		case <-jm.stopCleanup:
+			return
+		}
+	}
+}
+
+func (jm *JobManager) Stop() {
+	jm.stopCleanupOnce.Do(func() {
+		close(jm.stopCleanup)
+	})
+	<-jm.cleanupDone
+}
+
+func (jm *JobManager) CleanupStale(ttl time.Duration) int {
+	jm.mu.Lock()
+	defer jm.mu.Unlock()
+
+	now := time.Now()
+	removed := 0
+	for id, item := range jm.jobs {
+		item.mu.RLock()
+		status := item.job.Status
+		finishedAt := item.finishedAt
+		createdAt := item.job.CreatedAt
+		item.mu.RUnlock()
+
+		if status == StatusCompleted || status == StatusFailed || status == StatusCancelled {
+			refTime := finishedAt
+			if refTime.IsZero() {
+				refTime = createdAt
+			}
+			if now.Sub(refTime) >= ttl {
+				delete(jm.jobs, id)
+				removed++
+			}
+		}
+	}
+	return removed
 }
 
 func (jm *JobManager) CreateJob(parentCtx context.Context, url, quality string) (*Job, context.Context) {
@@ -128,8 +190,10 @@ func (jm *JobManager) UpdateJobProgress(id string, prog downloader.Progress) {
 		item.job.Status = StatusProcessing
 	case "completed":
 		item.job.Status = StatusCompleted
+		item.finishedAt = time.Now()
 	case "cancelled":
 		item.job.Status = StatusCancelled
+		item.finishedAt = time.Now()
 	}
 
 	item.job.Progress = prog.Progress
@@ -157,6 +221,7 @@ func (jm *JobManager) SetJobCompleted(id string) {
 	item.job.Progress = 100.0
 	item.job.Speed = 0
 	item.job.ETA = 0
+	item.finishedAt = time.Now()
 }
 
 func (jm *JobManager) SetJobFailed(id string, err error) {
@@ -181,6 +246,7 @@ func (jm *JobManager) SetJobFailed(id string, err error) {
 	} else {
 		item.job.Error = "unknown error"
 	}
+	item.finishedAt = time.Now()
 }
 
 func (jm *JobManager) CancelJob(id string) bool {
@@ -201,6 +267,7 @@ func (jm *JobManager) CancelJob(id string) bool {
 
 	item.job.Status = StatusCancelled
 	item.job.Error = "download cancelled by user"
+	item.finishedAt = time.Now()
 	if item.cancel != nil {
 		item.cancel()
 	}
@@ -209,17 +276,19 @@ func (jm *JobManager) CancelJob(id string) bool {
 
 func (jm *JobManager) CancelAll() {
 	jm.mu.Lock()
-	defer jm.mu.Unlock()
-
+	now := time.Now()
 	for _, item := range jm.jobs {
 		item.mu.Lock()
 		if item.job.Status != StatusCompleted && item.job.Status != StatusFailed && item.job.Status != StatusCancelled {
 			item.job.Status = StatusCancelled
 			item.job.Error = "server shutdown"
+			item.finishedAt = now
 			if item.cancel != nil {
 				item.cancel()
 			}
 		}
 		item.mu.Unlock()
 	}
+	jm.mu.Unlock()
+	jm.Stop()
 }

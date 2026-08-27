@@ -99,7 +99,7 @@ func ValidateURL(rawURL string) error {
 	}
 	parsed, err := url.ParseRequestURI(rawURL)
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrInvalidURL, err)
+		return fmt.Errorf("%w: %w", ErrInvalidURL, err)
 	}
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
 		return fmt.Errorf("%w: scheme must be http or pages must be http/https", ErrInvalidURL)
@@ -206,12 +206,12 @@ func (d *YTDLPDownloader) Metadata(ctx context.Context, rawURL string) (*Metadat
 		if errors.Is(ctx.Err(), context.Canceled) {
 			return nil, ErrCancelled
 		}
-		return nil, fmt.Errorf("%w: %v", ErrMetadataFailed, err)
+		return nil, fmt.Errorf("%w: %w", ErrMetadataFailed, err)
 	}
 
 	var raw ytdlpJSONRaw
 	if err := json.Unmarshal(out, &raw); err != nil {
-		return nil, fmt.Errorf("%w: failed to parse metadata JSON: %v", ErrMetadataFailed, err)
+		return nil, fmt.Errorf("%w: failed to parse metadata JSON: %w", ErrMetadataFailed, err)
 	}
 
 	uploader := raw.Uploader
@@ -428,7 +428,7 @@ func (d *YTDLPDownloader) Download(
 	}
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("%w: %v", ErrDownloadFailed, err)
+		return fmt.Errorf("%w: %w", ErrDownloadFailed, err)
 	}
 
 	// Read stderr concurrently
@@ -498,12 +498,12 @@ func (d *YTDLPDownloader) Download(
 		return ErrCancelled
 	}
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrDownloadFailed, err)
+		return fmt.Errorf("%w: %w", ErrDownloadFailed, err)
 	}
 
 	// Verify that expected output file actually exists on disk!
 	if err := verifyOutputFileExists(outputDir, qClean); err != nil {
-		return fmt.Errorf("%w: %v", ErrDownloadFailed, err)
+		return fmt.Errorf("%w: %w", ErrDownloadFailed, err)
 	}
 
 	lastProgress.Status = "completed"

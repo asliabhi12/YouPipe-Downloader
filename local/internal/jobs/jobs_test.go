@@ -159,4 +159,72 @@ func TestConcurrentJobManagerAccess(t *testing.T) {
 	}
 
 	wg.Wait()
+	jm.Stop()
 }
+
+func TestJobExpirationCleanup(t *testing.T) {
+	jm := NewJobManager()
+	defer jm.Stop()
+	ctx := context.Background()
+
+	// Active jobs
+	queuedJob, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=queued", "1080p")
+	dlJob, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=downloading", "720p")
+	jm.UpdateJobProgress(dlJob.ID, downloader.Progress{Status: "downloading", Progress: 30})
+
+	procJob, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=processing", "480p")
+	jm.UpdateJobProgress(procJob.ID, downloader.Progress{Status: "processing", Progress: 99})
+
+	// Terminal jobs
+	completedJob, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=completed", "1080p")
+	jm.SetJobCompleted(completedJob.ID)
+
+	failedJob, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=failed", "720p")
+	jm.SetJobFailed(failedJob.ID, fmt.Errorf("network failure"))
+
+	cancelledJob, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=cancelled", "360p")
+	jm.CancelJob(cancelledJob.ID)
+
+	// Artificially age the finishedAt timestamp of terminal jobs back 35 minutes
+	pastTime := time.Now().Add(-35 * time.Minute)
+	jm.mu.Lock()
+	if item, ok := jm.jobs[completedJob.ID]; ok {
+		item.finishedAt = pastTime
+	}
+	if item, ok := jm.jobs[failedJob.ID]; ok {
+		item.finishedAt = pastTime
+	}
+	if item, ok := jm.jobs[cancelledJob.ID]; ok {
+		item.finishedAt = pastTime
+	}
+	jm.mu.Unlock()
+
+	// Perform cleanup with 30-minute TTL
+	removed := jm.CleanupStale(30 * time.Minute)
+	if removed != 3 {
+		t.Errorf("Expected 3 jobs to be removed by CleanupStale, got %d", removed)
+	}
+
+	// Active jobs MUST be retained
+	for _, id := range []string{queuedJob.ID, dlJob.ID, procJob.ID} {
+		if _, exists := jm.GetJob(id); !exists {
+			t.Errorf("Active job %s was incorrectly cleaned up", id)
+		}
+	}
+
+	// Terminal jobs MUST be expired
+	for _, id := range []string{completedJob.ID, failedJob.ID, cancelledJob.ID} {
+		if _, exists := jm.GetJob(id); exists {
+			t.Errorf("Expired terminal job %s was not cleaned up", id)
+		}
+	}
+}
+
+func TestJobManagerStopLifecycle(t *testing.T) {
+	jm := NewJobManager()
+	// Calling Stop should cleanly shut down the cleanup goroutine
+	jm.Stop()
+	// Second Stop call should be idempotent and not panic
+	jm.Stop()
+}
+

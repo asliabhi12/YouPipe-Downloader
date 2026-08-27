@@ -3,6 +3,7 @@ package downloader
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -269,5 +270,27 @@ func TestJSRuntimeFlagDoesNotDisplaceURLOrContainer(t *testing.T) {
 	}
 	if got := flagValue(args, "--ffmpeg-location"); got != "/bin" {
 		t.Fatalf("--ffmpeg-location = %q, want /bin", got)
+	}
+}
+
+func TestMetadataErrorWrappingSentinelDetection(t *testing.T) {
+	// Verify that when errors are wrapped with ErrMetadataFailed,
+	// errors.Is successfully detects both ErrMetadataFailed and the underlying sentinel.
+	sentinel := errors.New("underlying_sentinel_error")
+	wrapped := fmt.Errorf("%w: %w", ErrMetadataFailed, sentinel)
+
+	if !errors.Is(wrapped, ErrMetadataFailed) {
+		t.Errorf("errors.Is(wrapped, ErrMetadataFailed) = false, want true")
+	}
+	if !errors.Is(wrapped, sentinel) {
+		t.Errorf("errors.Is(wrapped, sentinel) = false, want true")
+	}
+
+	wrappedJS := fmt.Errorf("%w: %w", ErrMetadataFailed, ErrJSRuntimeMissing)
+	if !errors.Is(wrappedJS, ErrMetadataFailed) {
+		t.Errorf("errors.Is(wrappedJS, ErrMetadataFailed) = false, want true")
+	}
+	if !errors.Is(wrappedJS, ErrJSRuntimeMissing) {
+		t.Errorf("errors.Is(wrappedJS, ErrJSRuntimeMissing) = false, want true")
 	}
 }
