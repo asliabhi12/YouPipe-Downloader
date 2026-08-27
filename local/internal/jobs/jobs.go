@@ -292,3 +292,18 @@ func (jm *JobManager) CancelAll() {
 	jm.mu.Unlock()
 	jm.Stop()
 }
+
+func (jm *JobManager) HasActiveJobs() bool {
+	jm.mu.RLock()
+	defer jm.mu.RUnlock()
+
+	for _, item := range jm.jobs {
+		item.mu.RLock()
+		status := item.job.Status
+		item.mu.RUnlock()
+		if status == StatusQueued || status == StatusDownloading || status == StatusProcessing {
+			return true
+		}
+	}
+	return false
+}

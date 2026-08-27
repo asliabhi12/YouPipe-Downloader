@@ -16,7 +16,7 @@ youpiper/
 
 ### How It Works
 1. **Helper Detection**: The web client probes the local helper daemon (`http://127.0.0.1:47821/health`).
-2. **Local Mode**: If YouPiper Helper is running, analysis and downloads are routed directly on-device to save files to `~/Downloads/YTD Local`.
+2. **Local Mode**: If YouPiper Helper is running, analysis and downloads are routed directly on-device to save files to `~/Downloads`.
 3. **Online Fallback**: If the local helper is unavailable, downloads are routed to the Python Flask backend, which processes the job and serves the completed file via browser download.
 
 ---
@@ -27,7 +27,7 @@ youpiper/
 - **Tech Stack**: Go 1.22+, no third-party modules
 - **Host**: `127.0.0.1:47821`
 - **Engine**: `yt-dlp` CLI + `FFmpeg`, bundled inside distributed builds
-- **Output Directory**: `~/Downloads/YTD Local` — still carries the pre-rename name; see `local/README.md`
+- **Output Directory**: `~/Downloads` (standard OS Downloads folder)
 - **Purpose**: Direct-to-disk local downloading without server bandwidth limits or queue delays.
 - **Distribution**: `local/packaging/` produces an installable `.app`/`.dmg` and `.exe`/`.zip` that start at login and need nothing else installed — see [local/packaging/PACKAGING.md](local/packaging/PACKAGING.md).
 

@@ -115,7 +115,7 @@ func GetDefaultDownloadsDir() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get user home directory: %w", err)
 	}
-	dir := filepath.Join(homeDir, "Downloads", "YTD Local")
+	dir := filepath.Join(homeDir, "Downloads")
 	return dir, nil
 }
 

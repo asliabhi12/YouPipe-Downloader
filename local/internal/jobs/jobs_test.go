@@ -228,3 +228,23 @@ func TestJobManagerStopLifecycle(t *testing.T) {
 	jm.Stop()
 }
 
+func TestHasActiveJobs(t *testing.T) {
+	jm := NewJobManager()
+	defer jm.Stop()
+	ctx := context.Background()
+
+	if jm.HasActiveJobs() {
+		t.Error("Expected HasActiveJobs to be false for empty JobManager")
+	}
+
+	job, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=active", "1080p")
+	if !jm.HasActiveJobs() {
+		t.Error("Expected HasActiveJobs to be true for queued job")
+	}
+
+	jm.SetJobCompleted(job.ID)
+	if jm.HasActiveJobs() {
+		t.Error("Expected HasActiveJobs to be false after job completion")
+	}
+}
+

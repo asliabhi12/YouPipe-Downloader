@@ -16,26 +16,68 @@
     <span class="helper-title" id="helper-indicator-title">Checking for YouPiper Helper…</span>
     <span class="helper-detail" id="helper-indicator-detail">One moment.</span>
   </span>
-  <a href="/helper" class="helper-cta" id="helper-indicator-cta">Get Helper</a>
+  <div class="helper-actions">
+    <button type="button" class="helper-toggle-btn btn-off" id="helper-btn-off" hidden>Turn Off</button>
+    <button type="button" class="helper-toggle-btn btn-on" id="helper-btn-on" hidden>Turn On</button>
+    <a href="/helper" class="helper-cta" id="helper-indicator-cta">Get Helper</a>
+  </div>
 </div>
 
 <script>
-  import { helperStore, HELPER_COPY } from '../lib/agent';
+  import { helperStore, HELPER_COPY, turnOffHelper, turnOnHelper, BackendError } from '../lib/agent';
 
   const root = document.getElementById('helper-indicator');
   const titleEl = document.getElementById('helper-indicator-title');
   const detailEl = document.getElementById('helper-indicator-detail');
   const ctaEl = document.getElementById('helper-indicator-cta');
+  const btnOff = document.getElementById('helper-btn-off') as HTMLButtonElement | null;
+  const btnOn = document.getElementById('helper-btn-on') as HTMLButtonElement | null;
 
-  if (root && titleEl && detailEl && ctaEl) {
+  if (root && titleEl && detailEl && ctaEl && btnOff && btnOn) {
     helperStore.subscribe((snapshot) => {
       const copy = HELPER_COPY[snapshot.state];
       root.dataset.state = snapshot.state;
-      titleEl.textContent = copy.title;
-      detailEl.textContent = copy.detail;
-      // Only pitch the Helper to someone who does not have it working. Nagging
-      // a user who already installed it is noise.
-      ctaEl.hidden = snapshot.state === 'available' || snapshot.state === 'checking';
+
+      if (snapshot.state === 'available') {
+        titleEl.textContent = 'YouPiper Helper';
+        detailEl.textContent = '● Running';
+        btnOff.hidden = false;
+        btnOn.hidden = true;
+        ctaEl.hidden = true;
+      } else if (snapshot.state === 'checking') {
+        titleEl.textContent = copy.title;
+        detailEl.textContent = copy.detail;
+        btnOff.hidden = true;
+        btnOn.hidden = true;
+        ctaEl.hidden = true;
+      } else {
+        titleEl.textContent = 'YouPiper Helper';
+        detailEl.textContent = '○ Off';
+        btnOff.hidden = true;
+        btnOn.hidden = false;
+        ctaEl.hidden = false;
+      }
+    });
+
+    btnOff.addEventListener('click', async () => {
+      try {
+        btnOff.disabled = true;
+        await turnOffHelper(false);
+      } catch (err) {
+        if (err instanceof BackendError && err.code === 'active_job') {
+          if (confirm('An active download is currently in progress. Stop YouPiper Helper anyway?')) {
+            await turnOffHelper(true);
+          }
+        } else {
+          console.error('Failed to turn off Helper:', err);
+        }
+      } finally {
+        btnOff.disabled = false;
+      }
+    });
+
+    btnOn.addEventListener('click', () => {
+      turnOnHelper();
     });
 
     helperStore.start();
@@ -138,6 +180,49 @@
     .helper-indicator[data-state='checking'] .helper-dot {
       animation: none;
     }
+  }
+
+  .helper-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .helper-toggle-btn {
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 9999px;
+    cursor: pointer;
+    border: 1px solid var(--color-hairline, #d9d9d9);
+    background-color: var(--color-surface, #ffffff);
+    color: var(--color-body, #262626);
+    transition: all 0.15s ease;
+  }
+
+  .helper-toggle-btn.btn-off {
+    background-color: #fff1f0;
+    border-color: #ffa39e;
+    color: #cf1322;
+  }
+
+  .helper-toggle-btn.btn-off:hover {
+    background-color: #ffccc7;
+  }
+
+  .helper-toggle-btn.btn-on {
+    background-color: #f6ffed;
+    border-color: #b7eb8f;
+    color: #389e0d;
+  }
+
+  .helper-toggle-btn.btn-on:hover {
+    background-color: #d9f7be;
+  }
+
+  .helper-toggle-btn[hidden] {
+    display: none;
   }
 
   .helper-cta {

@@ -391,6 +391,10 @@ export interface HelperStore {
   start(): void;
   /** Stops background polling. Idempotent. */
   stop(): void;
+  /** Turns off the Helper background process and updates store. */
+  turnOff(force?: boolean): Promise<boolean>;
+  /** Requests turning on the Helper and refreshes status. */
+  turnOn(): void;
 }
 
 export interface HelperStoreOptions {
@@ -498,6 +502,40 @@ export function createHelperStore(opts: HelperStoreOptions): HelperStore {
         clearTimer(pollHandle);
         pollHandle = null;
       }
+    },
+
+    async turnOff(force = false): Promise<boolean> {
+      try {
+        const url = `${opts.baseUrl}/off${force ? '?force=true' : ''}`;
+        const res = await opts.fetchImpl(url, { method: 'POST' });
+        if (res.status === 409) {
+          throw new BackendError(
+            'An active download is currently in progress.',
+            'active_job',
+            'active job in progress',
+            'local'
+          );
+        }
+      } catch (err) {
+        if (err instanceof BackendError) throw err;
+      }
+      set({
+        state: 'unavailable',
+        health: null,
+        reason: 'turned off by user'
+      });
+      return true;
+    },
+
+    turnOn() {
+      if (typeof window !== 'undefined') {
+        try {
+          window.location.href = 'youpiper://start';
+        } catch {
+          // ignore protocol trigger failure
+        }
+      }
+      void refresh();
     }
   };
 }

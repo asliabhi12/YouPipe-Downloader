@@ -1,9 +1,7 @@
 # YouPiper Helper (Go Companion)
 
 ## Purpose
-YouPiper Helper is a lightweight localhost HTTP daemon that runs directly on the user's computer. It processes media downloads locally and saves them directly to the user's Downloads directory (`~/Downloads/YTD Local`).
-
-> **Note:** the output folder is still named `YTD Local` from before the YouPiper rename. Renaming it is deferred until Helper packaging, so existing users' files aren't orphaned. See `GetDefaultDownloadsDir` in `internal/downloader/downloader.go`.
+YouPiper Helper is a lightweight localhost HTTP daemon that runs directly on the user's computer. It processes media downloads locally and saves them directly to the user's standard Downloads directory (`~/Downloads`).
 
 ## Technology
 - **Language**: Go 1.22+

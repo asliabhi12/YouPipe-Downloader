@@ -315,3 +315,52 @@ func TestMetadataReportsMissingJSRuntime(t *testing.T) {
 		t.Fatalf("error = %q, want js_runtime_missing", res.Error)
 	}
 }
+
+func TestOffEndpoint(t *testing.T) {
+	srv, _, _ := setupTestServer()
+
+	req := httptest.NewRequest(http.MethodPost, "/off", nil)
+	rec := httptest.NewRecorder()
+
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected status code %d on POST /off, got %d", http.StatusOK, rec.Code)
+	}
+
+	var res map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
+		t.Fatalf("Failed to decode off response: %v", err)
+	}
+
+	if res["status"] != "off" {
+		t.Errorf("Expected status 'off', got %v", res["status"])
+	}
+}
+
+func TestOffEndpointConflict(t *testing.T) {
+	srv, _, jm := setupTestServer()
+	ctx := context.Background()
+
+	// Create an active job
+	job, _ := jm.CreateJob(ctx, "https://youtube.com/watch?v=active", "1080p")
+	jm.UpdateJobProgress(job.ID, downloader.Progress{Status: "downloading", Progress: 50.0})
+
+	// Without force, should return 409 Conflict
+	req := httptest.NewRequest(http.MethodPost, "/off", nil)
+	rec := httptest.NewRecorder()
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("Expected status code %d on POST /off with active job, got %d", http.StatusConflict, rec.Code)
+	}
+
+	// With force=true, should succeed
+	reqForce := httptest.NewRequest(http.MethodPost, "/off?force=true", nil)
+	recForce := httptest.NewRecorder()
+	srv.routes().ServeHTTP(recForce, reqForce)
+
+	if recForce.Code != http.StatusOK {
+		t.Fatalf("Expected status code %d on POST /off?force=true, got %d", http.StatusOK, recForce.Code)
+	}
+}

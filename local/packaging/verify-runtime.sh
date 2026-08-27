@@ -61,7 +61,7 @@ fail() { printf '%s  FAIL %s%s %s\n' "$red" "$1" "$reset" "${2:-}"; FAILED+=("$1
 skip() { printf '%s  SKIP %s%s %s%s%s\n' "$yellow" "$1" "$reset" "$dim" "${2:-}" "$reset"; SKIPPED+=("$1"); }
 head2() { printf '\n%s%s%s\n' "$bold" "$1" "$reset"; }
 
-DOWNLOADS="$HOME/Downloads/YTD Local"
+DOWNLOADS="$HOME/Downloads"
 
 if [[ $FRESH -eq 1 && -d "$DOWNLOADS" ]]; then
 	archive="$DOWNLOADS/.superseded"
@@ -398,8 +398,28 @@ run_download_check "007c" 1080p 1080p 1080 "1080p downloads and is really 1080p 
 head2 "REG-JS-008  packaged Helper downloads audio"
 run_download_check "008" audio audio audio "MP3 downloads and is really an MP3"
 
+# --- REG-JS-009  ON/OFF control -------------------------------------------
+head2 "REG-JS-009  Helper ON/OFF control"
+if [[ ! -x "$HELPER_EXE" ]]; then
+	skip "009 Helper ON/OFF control flags" "$APP not installed"
+else
+	status_on="$("$HELPER_EXE" -install-startup 2>&1 || true)"
+	if [[ "$status_on" == *"automatically"* ]]; then
+		pass "009a enable helper startup" "$status_on"
+	else
+		fail "009a enable helper startup" "$status_on"
+	fi
+
+	status_off="$("$HELPER_EXE" -uninstall 2>&1 || true)"
+	if [[ "$status_off" == *"no longer start"* ]]; then
+		pass "009b disable helper startup" "$status_off"
+	else
+		fail "009b disable helper startup" "$status_off"
+	fi
+fi
+
 if [[ $KEEP -eq 0 && $OFFLINE -eq 0 ]]; then
-	printf '\n%s(downloaded test files left in ~/Downloads/YTD Local)%s\n' "$dim" "$reset"
+	printf '\n%s(downloaded test files left in ~/Downloads)%s\n' "$dim" "$reset"
 fi
 
 # --- summary ---------------------------------------------------------------

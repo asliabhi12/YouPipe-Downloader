@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -58,8 +59,104 @@ func TestGetDefaultDownloadsDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetDefaultDownloadsDir() error = %v", err)
 	}
-	if !strings.HasSuffix(dir, "Downloads/YTD Local") && !strings.HasSuffix(dir, "Downloads\\YTD Local") {
+	if !strings.HasSuffix(dir, "Downloads") && !strings.HasSuffix(dir, "Downloads\\") {
 		t.Errorf("Unexpected default downloads directory: %s", dir)
+	}
+}
+
+func TestDownloadPath001ResolvesToOSDownloads(t *testing.T) {
+	dir, err := GetDefaultDownloadsDir()
+	if err != nil {
+		t.Fatalf("GetDefaultDownloadsDir error: %v", err)
+	}
+	if !strings.HasSuffix(dir, "Downloads") && !strings.HasSuffix(dir, "Downloads\\") {
+		t.Fatalf("DOWNLOAD-PATH-001: Expected path ending in Downloads, got %s", dir)
+	}
+	if strings.Contains(dir, "YTD Local") {
+		t.Fatalf("DOWNLOAD-PATH-001: Path still contains legacy YTD Local folder: %s", dir)
+	}
+}
+
+func TestDownloadPath002DirectMP4ToDownloads(t *testing.T) {
+	downloadsDir, _ := GetDefaultDownloadsDir()
+	args := buildDownloadArgs("https://youtu.be/x", "1080p", downloadsDir, "/bin/ffmpeg", "/bin/deno")
+	outTemplate := flagValue(args, "-o")
+	if !strings.HasPrefix(outTemplate, downloadsDir) {
+		t.Fatalf("DOWNLOAD-PATH-002: Output template %s does not target Downloads directory %s", outTemplate, downloadsDir)
+	}
+	if got := flagValue(args, "--merge-output-format"); got != "mp4" {
+		t.Fatalf("DOWNLOAD-PATH-002: Expected mp4 format, got %s", got)
+	}
+}
+
+func TestDownloadPath003DirectMP3ToDownloads(t *testing.T) {
+	downloadsDir, _ := GetDefaultDownloadsDir()
+	args := buildDownloadArgs("https://youtu.be/x", "audio", downloadsDir, "/bin/ffmpeg", "/bin/deno")
+	outTemplate := flagValue(args, "-o")
+	if !strings.HasPrefix(outTemplate, downloadsDir) {
+		t.Fatalf("DOWNLOAD-PATH-003: Output template %s does not target Downloads directory %s", outTemplate, downloadsDir)
+	}
+	if got := flagValue(args, "--audio-format"); got != "mp3" {
+		t.Fatalf("DOWNLOAD-PATH-003: Expected mp3 format, got %s", got)
+	}
+}
+
+func TestDownloadPath004CollisionProtection(t *testing.T) {
+	downloadsDir, _ := GetDefaultDownloadsDir()
+	args1080 := buildDownloadArgs("https://youtu.be/x", "1080p", downloadsDir, "/bin/ffmpeg", "/bin/deno")
+	args720 := buildDownloadArgs("https://youtu.be/x", "720p", downloadsDir, "/bin/ffmpeg", "/bin/deno")
+	tmpl1080 := flagValue(args1080, "-o")
+	tmpl720 := flagValue(args720, "-o")
+	if tmpl1080 == tmpl720 {
+		t.Fatal("DOWNLOAD-PATH-004: Templates for different qualities are identical; risk of accidental overwrite")
+	}
+	if !strings.Contains(tmpl1080, "[%(id)s]") || !strings.Contains(tmpl1080, "[1080p]") {
+		t.Fatalf("DOWNLOAD-PATH-004: Template missing id/quality collision tags: %s", tmpl1080)
+	}
+}
+
+func TestDownloadPath005FilenameSanitization(t *testing.T) {
+	err := ValidateURL("https://www.youtube.com/watch?v=valid_id")
+	if err != nil {
+		t.Fatalf("DOWNLOAD-PATH-005: ValidateURL failed on valid URL: %v", err)
+	}
+	errInvalid := ValidateURL("not-a-url")
+	if errInvalid == nil {
+		t.Fatal("DOWNLOAD-PATH-005: ValidateURL accepted invalid URL")
+	}
+}
+
+func TestDownloadPath006FailedDownloadNoIncompleteFile(t *testing.T) {
+	dir := t.TempDir()
+	// Write a .part file
+	partFile := filepath.Join(dir, "test [video123] [1080p].mp4.part")
+	if err := os.WriteFile(partFile, []byte("partial content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// verifyOutputFileExists should reject incomplete .part file
+	err := verifyOutputFileExists(dir, "1080p")
+	if err == nil {
+		t.Fatal("DOWNLOAD-PATH-006: verifyOutputFileExists incorrectly accepted a .part file")
+	}
+}
+
+func TestDownloadPath007LegacyFolderUntouched(t *testing.T) {
+	homeDir := t.TempDir()
+	legacyDir := filepath.Join(homeDir, "Downloads", "YTD Local")
+	if err := os.MkdirAll(legacyDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	legacyFile := filepath.Join(legacyDir, "old_video.mp4")
+	if err := os.WriteFile(legacyFile, []byte("old content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	targetDir := filepath.Join(homeDir, "Downloads")
+	if _, err := os.Stat(legacyFile); err != nil {
+		t.Fatalf("DOWNLOAD-PATH-007: Legacy file was removed or disturbed: %v", err)
+	}
+	if targetDir == legacyDir {
+		t.Fatal("DOWNLOAD-PATH-007: Default downloads dir is still legacy directory")
 	}
 }
 

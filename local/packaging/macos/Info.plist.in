@@ -35,6 +35,19 @@
 	     app-sandbox entitlements requesting them: the Helper asks for no
 	     privacy-protected resources. It writes to the user's Downloads folder and
 	     talks to the loopback interface, nothing more. -->
+	<!-- Custom URL scheme to allow website to launch Helper when turned OFF -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.youpiper.helper</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>youpiper</string>
+			</array>
+		</dict>
+	</array>
+
 	<key>NSHumanReadableCopyright</key>
 	<string>@@COPYRIGHT@@</string>
 </dict>

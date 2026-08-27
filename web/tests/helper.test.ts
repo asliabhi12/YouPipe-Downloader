@@ -584,3 +584,93 @@ test('a failed job error string is never shown to the user verbatim', () => {
     'That does not look like a video link. Please check it and try again.'
   );
 });
+
+// ---------------------------------------------------------------------------
+// Helper ON/OFF Control Tests
+// ---------------------------------------------------------------------------
+
+test('HELPER-STATUS-001: Website correctly detects running Helper', async () => {
+  const { store } = storeWith(stubFetch((path) => (path === 'local:/health' ? json(HEALTHY) : undefined)).fetchImpl);
+  const snap = await store.refresh();
+  assert.equal(snap.state, 'available');
+});
+
+test('HELPER-STATUS-002: Website correctly handles Helper being OFF', async () => {
+  const { store } = storeWith(stubFetch(() => undefined).fetchImpl);
+  const snap = await store.refresh();
+  assert.equal(snap.state, 'unavailable');
+});
+
+test('HELPER-OFF-001 & HELPER-OFF-002: Helper can be disabled and stops when disabled', async () => {
+  let isRunning = true;
+  const { store } = storeWith(
+    stubFetch((path, init) => {
+      if (path === 'local:/health') return isRunning ? json(HEALTHY) : undefined;
+      if (path.startsWith('local:/off') && init.method === 'POST') {
+        isRunning = false;
+        return json({ status: 'off', message: 'YouPiper Helper turned off' });
+      }
+      return undefined;
+    }).fetchImpl
+  );
+
+  const initSnap = await store.refresh();
+  assert.equal(initSnap.state, 'available');
+
+  await store.turnOff();
+  assert.equal(store.get().state, 'unavailable');
+
+  const afterSnap = await store.refresh();
+  assert.equal(afterSnap.state, 'unavailable');
+});
+
+test('HELPER-OFF-001 conflict: Helper turnOff fails when active download exists unless forced', async () => {
+  const { store } = storeWith(
+    stubFetch((path, init) => {
+      if (path.startsWith('local:/off') && init.method === 'POST') {
+        if (!path.includes('force=true')) {
+          return json({ error: 'active_job', details: 'An active download is in progress' }, 409);
+        }
+        return json({ status: 'off' });
+      }
+      return undefined;
+    }).fetchImpl
+  );
+
+  await assert.rejects(
+    () => store.turnOff(false),
+    (err: any) => err instanceof BackendError && err.code === 'active_job'
+  );
+
+  const res = await store.turnOff(true);
+  assert.equal(res, true);
+  assert.equal(store.get().state, 'unavailable');
+});
+
+test('HELPER-FALLBACK-001: Online download still works when Helper is OFF', async () => {
+  const { api } = apiWith((path) => {
+    if (path === 'local:/health') return undefined; // OFF
+    if (path === 'online:/api/analyze') return json(ONLINE_METADATA);
+    if (path === 'online:/api/download') return json({ job_id: 'online-job-1' });
+    return undefined;
+  });
+
+  const meta = await api.analyze('https://www.youtube.com/watch?v=jNQXAC9IVRw');
+  assert.equal(meta.backend, 'online');
+  const job = await api.download('https://www.youtube.com/watch?v=jNQXAC9IVRw', '1080p');
+  assert.equal(job.backend, 'online');
+});
+
+test('HELPER-DOWNLOAD-001: Local download still works when Helper is ON', async () => {
+  const { api } = apiWith((path) => {
+    if (path === 'local:/health') return json(HEALTHY);
+    if (path === 'local:/metadata') return json(LOCAL_METADATA);
+    if (path === 'local:/downloads') return json({ job_id: 'local-job-1' });
+    return undefined;
+  });
+
+  const meta = await api.analyze('https://www.youtube.com/watch?v=jNQXAC9IVRw');
+  assert.equal(meta.backend, 'local');
+  const job = await api.download('https://www.youtube.com/watch?v=jNQXAC9IVRw', '1080p');
+  assert.equal(job.backend, 'local');
+});

@@ -67,6 +67,9 @@ export const download = api.download;
 export const getStatus = api.getStatus;
 export const cancelDownload = api.cancelDownload;
 
+export const turnOffHelper = (force?: boolean) => helperStore.turnOff(force);
+export const turnOnHelper = () => helperStore.turnOn();
+
 // --- Helper state accessors -------------------------------------------------
 
 /** Current Helper state without touching the network. */

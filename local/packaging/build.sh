@@ -123,7 +123,7 @@ build_macos() {
 
 	echo "  compiling"
 	# Deployment target matches LSMinimumSystemVersion in Info.plist.in.
-	CGO_ENABLED=0 GOOS=darwin GOARCH="$arch" \
+	CGO_ENABLED=1 GOOS=darwin GOARCH="$arch" \
 		go build -trimpath -ldflags "$LDFLAGS" \
 		-o "$app/Contents/MacOS/$EXE_NAME" "$ROOT/cmd/agent"
 

@@ -17,6 +17,8 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -25,6 +27,7 @@ import (
 	"ytd-local/internal/downloader"
 	"ytd-local/internal/jobs"
 	"ytd-local/internal/server"
+	"ytd-local/internal/tray"
 )
 
 // maxLogBytes caps the log file. The Helper may run every day for years, and an
@@ -32,13 +35,25 @@ import (
 const maxLogBytes = 1 << 20 // 1 MiB
 
 func main() {
+	runtime.LockOSThread()
 	addrFlag := flag.String("addr", server.DefaultAddr, "HTTP server address (must bind to 127.0.0.1)")
-	outputFlag := flag.String("output", "", "Download output directory (defaults to ~/Downloads/YTD Local)")
+	outputFlag := flag.String("output", "", "Download output directory (defaults to ~/Downloads)")
 	installFlag := flag.Bool("install-startup", false, "Register the Helper to start at login, then exit")
 	uninstallFlag := flag.Bool("uninstall", false, "Remove the login registration, then exit (downloads are never touched)")
+	onFlag := flag.Bool("on", false, "Enable the Helper and register to start at login")
+	offFlag := flag.Bool("off", false, "Disable the Helper, remove login registration, and exit")
 	noStartupFlag := flag.Bool("no-startup", false, "Do not register at login on this launch")
 	statusFlag := flag.Bool("status", false, "Print startup registration and tool locations, then exit")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
+
+	var cleanArgs []string
+	for _, arg := range os.Args {
+		if !strings.HasPrefix(arg, "-psn") {
+			cleanArgs = append(cleanArgs, arg)
+		}
+	}
+	os.Args = cleanArgs
+
 	flag.Parse()
 
 	if *versionFlag {
@@ -49,7 +64,7 @@ func main() {
 	exe := selfPath()
 
 	switch {
-	case *uninstallFlag:
+	case *uninstallFlag || *offFlag:
 		if err := autostart.Uninstall(); err != nil {
 			fmt.Fprintf(os.Stderr, "Could not remove the login item: %v\n", err)
 			os.Exit(1)
@@ -57,7 +72,7 @@ func main() {
 		fmt.Println("YouPiper Helper will no longer start automatically.")
 		return
 
-	case *installFlag:
+	case *installFlag || *onFlag:
 		if err := autostart.Install(exe); err != nil {
 			fmt.Fprintf(os.Stderr, "Could not register at login: %v\n", err)
 			os.Exit(1)
@@ -109,6 +124,64 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	srvErr := make(chan error, 1)
+
+	if runtime.GOOS == "darwin" && (autostart.IsPackaged() || os.Getenv("FORCE_TRAY") == "1") {
+		tray.Init(
+			"YouPiper",
+			server.ServerVersion,
+			func() {
+				log.Println("Menu action: Turn Off Helper")
+				if err := autostart.Uninstall(); err != nil {
+					log.Printf("Warning: failed to uninstall autostart: %v", err)
+				}
+				tray.SetStatus(false)
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_ = srv.Shutdown(ctx)
+			},
+			func() {
+				log.Println("Menu action: Turn On Helper")
+				if err := autostart.Install(exe); err != nil {
+					log.Printf("Warning: failed to install autostart: %v", err)
+				}
+				tray.SetStatus(true)
+			},
+			func() {
+				log.Println("Menu action: Open YouPiper")
+				tray.OpenDefaultBrowser("https://youpiper.com")
+			},
+			func() {
+				log.Println("Menu action: Quit")
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				defer cancel()
+				_ = srv.Shutdown(ctx)
+				os.Exit(0)
+			},
+		)
+		tray.SetStatus(true)
+
+		go func() { srvErr <- srv.Start() }()
+
+		go func() {
+			select {
+			case <-stop:
+				log.Println("Received shutdown signal. Gracefully stopping server...")
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_ = srv.Shutdown(ctx)
+				tray.Stop()
+			case err := <-srvErr:
+				if err != nil && !errors.Is(err, http.ErrServerClosed) {
+					log.Printf("Server stopped: %v", err)
+				}
+				tray.Stop()
+			}
+		}()
+
+		tray.Run()
+		return
+	}
+
 	go func() { srvErr <- srv.Start() }()
 
 	select {

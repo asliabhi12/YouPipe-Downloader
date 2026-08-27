@@ -11,8 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"ytd-local/internal/autostart"
 	"ytd-local/internal/downloader"
 	"ytd-local/internal/jobs"
+	"ytd-local/internal/tray"
 )
 
 const ServerVersion = "0.1.0"
@@ -89,6 +91,8 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /downloads", s.handleCreateDownload)
 	mux.HandleFunc("GET /downloads/{id}", s.handleGetDownload)
 	mux.HandleFunc("POST /downloads/{id}/cancel", s.handleCancelDownload)
+	mux.HandleFunc("POST /off", s.handleOff)
+	mux.HandleFunc("POST /shutdown", s.handleOff)
 
 	return mux
 }
@@ -303,4 +307,30 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	log.Println("Shutting down YouPiper Helper...")
 	s.jm.CancelAll()
 	return s.httpServer.Shutdown(ctx)
+}
+
+func (s *Server) handleOff(w http.ResponseWriter, r *http.Request) {
+	force := r.URL.Query().Get("force") == "true"
+	if !force && s.jm.HasActiveJobs() {
+		writeError(w, http.StatusConflict, "active_job", "An active download is in progress")
+		return
+	}
+
+	if err := autostart.Uninstall(); err != nil {
+		log.Printf("Warning: failed to uninstall autostart: %v", err)
+	}
+
+	tray.SetStatus(false)
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"status":  "off",
+		"message": "YouPiper Helper turned off",
+	})
+
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = s.Shutdown(ctx)
+	}()
 }
