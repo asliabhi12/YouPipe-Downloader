@@ -146,32 +146,34 @@ python app.py
 #### Environment Variables (Server)
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `5001` | HTTP server port |
+| `PORT` | `5001` (Render defaults to `10000`) | HTTP server port |
 | `MAX_CONCURRENT` | `2` | Maximum parallel download jobs |
+| `ALLOWED_ORIGINS` | `https://youpiper.ytd-web.workers.dev,http://127.0.0.1:4321,http://localhost:4321` | Allowed CORS origin whitelist (comma-separated) |
 | `CLEANUP_AGE_SECONDS` | `1800` | Expiry age (seconds) for temporary files |
 | `YTDLP_PLAYER_CLIENT` | `web_embedded` | yt-dlp player client. Empty string opts out |
 | `YTDLP_COOKIES_FILE` | *(none)* | Path to Netscape format cookie file |
 
 ---
 
-### Running the Web Frontend (Astro)
+### Deployment Setup
 
+#### 1. Backend Deployment (Render)
+The backend is packaged for containerized deployment on Render using [server/Dockerfile](server/Dockerfile) or [render.yaml](render.yaml):
+* **Docker Context:** `./server`
+* **Health Check Path:** `/health`
+* **WSGI Server:** Gunicorn (`--workers 2 --threads 4`)
+
+#### 2. Frontend Deployment (Cloudflare Workers)
+Deploy the Astro frontend to Cloudflare Workers Static Assets:
 ```bash
 cd web
-npm install
-npm run dev
-```
-
-#### Production Build
-```bash
-cd web
-npm run build
+PUBLIC_ONLINE_URL=https://<your-render-service>.onrender.com npm run deploy
 ```
 
 #### Environment Variables (Web)
 | Variable | Default | Description |
 |---|---|---|
-| `PUBLIC_ONLINE_URL` | `http://127.0.0.1:5001` | Backend URL for online processing fallback |
+| `PUBLIC_ONLINE_URL` | `http://127.0.0.1:5001` | Backend URL for online processing fallback (e.g., Render service URL) |
 
 ---
 

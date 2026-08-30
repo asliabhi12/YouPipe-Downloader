@@ -3,6 +3,7 @@
 /agent
 /local/agent
 *.exe
+!web/public/downloads/*.exe
 *.exe~
 *.dll
 *.so
@@ -28,6 +29,7 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/
+.cursor/
 *.swp
 *.swo
 

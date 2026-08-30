@@ -400,7 +400,7 @@ def _finalize(job, src_path, verify, quality_label):
 def _fail(job, message):
     with jobs_lock:
         job["status"] = "failed"
-        job["error"] = message
+        job["error"] = _sanitize_error(message)
         job["progress"] = 0
         for f in glob.glob(os.path.join(TMP_DIR, f"{job['job_id']}.*")):
             _safe_remove(f)
@@ -414,8 +414,24 @@ def _safe_remove(path):
         pass
 
 
+def _sanitize_error(msg):
+    """Sanitize internal paths, commands, and stack traces from API responses."""
+    if not msg:
+        return "An error occurred during media processing"
+    s = str(msg)
+    # Remove internal file paths
+    s = re.sub(r"/(?:[a-zA-Z0-9_.-]+/)+[a-zA-Z0-9_.-]+", "[file]", s)
+    if "yt-dlp exited" in s:
+        parts = s.split(":", 1)
+        if len(parts) > 1:
+            s = f"Extraction error: {parts[1].strip()}"
+        else:
+            s = "Extraction failed"
+    return s
+
+
 # --------------------------------------------------------------------------
-# Cleanup thread (removes abandoned/failed/completed files)
+# Cleanup thread & signal handlers
 # --------------------------------------------------------------------------
 def _cleanup_loop():
     while True:
@@ -439,13 +455,41 @@ def _cleanup_loop():
 threading.Thread(target=_cleanup_loop, daemon=True).start()
 
 
+def _handle_signal(sig, frame):
+    for f in glob.glob(os.path.join(TMP_DIR, "*")):
+        _safe_remove(f)
+    os._exit(0)
+
+
+try:
+    signal.signal(signal.SIGTERM, _handle_signal)
+    signal.signal(signal.SIGINT, _handle_signal)
+except (ValueError, AttributeError):
+    pass
+
+
 # --------------------------------------------------------------------------
-# API
+# CORS & API
 # --------------------------------------------------------------------------
+ALLOWED_ORIGINS_RAW = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "https://youpiper.ytd-web.workers.dev,http://127.0.0.1:4321,http://localhost:4321,http://127.0.0.1:5001"
+)
+ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS_RAW.split(",") if o.strip()]
+
+
 @app.after_request
 def _cors(resp):
-    # Browser frontend (Astro dev on :4321) calls this API cross-origin.
-    resp.headers.setdefault("Access-Control-Allow-Origin", "*")
+    origin = request.headers.get("Origin")
+    if origin:
+        if "*" in ALLOWED_ORIGINS:
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+        elif origin in ALLOWED_ORIGINS:
+            resp.headers["Access-Control-Allow-Origin"] = origin
+            resp.headers["Vary"] = "Origin"
+    elif "*" in ALLOWED_ORIGINS:
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+
     resp.headers.setdefault("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     resp.headers.setdefault("Access-Control-Allow-Headers", "Content-Type")
     resp.headers.setdefault("Access-Control-Expose-Headers", "Content-Disposition")
@@ -453,8 +497,32 @@ def _cors(resp):
 
 
 @app.route("/api/<path:_path>", methods=["OPTIONS"])
-def _cors_preflight(_path):
+@app.route("/health", methods=["OPTIONS"])
+def _cors_preflight(_path=None):
     return ("", 204)
+
+
+@app.errorhandler(400)
+def _handle_bad_request(e):
+    desc = getattr(e, "description", "Bad request")
+    return jsonify({"error": _sanitize_error(desc)}), 400
+
+
+@app.errorhandler(404)
+def _handle_not_found(e):
+    return jsonify({"error": "Resource not found"}), 404
+
+
+@app.errorhandler(405)
+def _handle_method_not_allowed(e):
+    return jsonify({"error": "Method not allowed"}), 405
+
+
+@app.errorhandler(500)
+@app.errorhandler(Exception)
+def _handle_internal_error(e):
+    app.logger.error("Internal error: %s", e, exc_info=True)
+    return jsonify({"error": "An internal server error occurred"}), 500
 
 
 @app.post("/api/analyze")
@@ -466,9 +534,10 @@ def analyze():
     try:
         info = ytdlp_info(url)
     except DownloaderError as e:
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:  # noqa: BLE001
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": _sanitize_error(str(e))}), 400
+    except Exception as e:
+        app.logger.error("Analyze error: %s", e, exc_info=True)
+        return jsonify({"error": "Unable to analyze video link"}), 500
     return jsonify({
         "title": info.get("title", ""),
         "uploader": info.get("uploader", ""),

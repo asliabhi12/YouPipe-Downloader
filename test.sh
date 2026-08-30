@@ -80,6 +80,7 @@ if [[ "$TARGET" == all || "$TARGET" == web ]]; then
   if require npm; then
     if [[ -d web/node_modules ]]; then
       run "astro build" web npm run build --silent
+      run "link audit" web node tests/link-audit.js
     else
       printf '\n%s==> astro build%s %s(skipped: run `npm install` in web/ first)%s\n' \
         "$bold" "$reset" "$dim" "$reset"

@@ -1,0 +1,345 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://youpiper.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Contact",
+          "item": "https://youpiper.com/contact"
+        }
+      ]
+    }
+  ]
+};
+---
+
+<Layout
+  title="Contact YouPiper"
+  description="Get in touch with the YouPiper team for support, feature requests, or general inquiries."
+  canonicalUrl="https://youpiper.com/contact"
+  ogTitle="Contact YouPiper"
+  ogDescription="Get in touch with the YouPiper team for support, feature requests, or general inquiries."
+  twitterTitle="Contact YouPiper"
+  twitterDescription="Get in touch with the YouPiper team for support, feature requests, or general inquiries."
+  jsonLd={breadcrumbJsonLd}
+>
+  <div class="page-wrapper">
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><span>Contact</span></li>
+      </ol>
+    </nav>
+
+    <div class="contact-layout">
+      <div class="contact-info">
+        <h1>Contact YouPiper</h1>
+        <p class="lead-text">
+          Have questions, feedback, or need assistance? Fill out the contact form or reach out to our team directly.
+        </p>
+
+        <div class="info-block">
+          <h3>Support Email</h3>
+          <p>For technical support and general inquiries:</p>
+          <p><a href="mailto:support@youpiper.com" class="email-link">support@youpiper.com</a></p>
+        </div>
+
+        <div class="info-block">
+          <h3>Response Time</h3>
+          <p>We aim to respond to all inquiries within 24 to 48 business hours.</p>
+        </div>
+
+        <div class="info-block">
+          <h3>Helpful Links</h3>
+          <ul class="quick-links">
+            <li><a href="/helper">Troubleshooting & Helper Guide</a></li>
+            <li><a href="/#faq">Frequently Asked Questions</a></li>
+            <li><a href="/privacy-policy">Privacy Policy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="contact-form-container">
+        <form id="contact-form" class="contact-form">
+          <div class="form-group">
+            <label for="contact-name">Your Name</label>
+            <input type="text" id="contact-name" name="name" required placeholder="Jane Doe" autocomplete="name" />
+          </div>
+
+          <div class="form-group">
+            <label for="contact-email">Email Address</label>
+            <input type="email" id="contact-email" name="email" required placeholder="jane@example.com" autocomplete="email" />
+          </div>
+
+          <div class="form-group">
+            <label for="contact-subject">Subject</label>
+            <input type="text" id="contact-subject" name="subject" required placeholder="How can we help?" />
+          </div>
+
+          <div class="form-group">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" name="message" rows="5" required placeholder="Write your message here..."></textarea>
+          </div>
+
+          <button type="submit" id="btn-submit-contact" class="btn-submit">
+            Send Message
+          </button>
+
+          <div id="contact-success-msg" class="success-banner hidden">
+            ✓ Thank you! Your message has been sent. We'll get back to you shortly.
+          </div>
+          <div id="contact-error-msg" class="error-banner hidden">
+            Could not send message. Please try sending an email directly to support@youpiper.com.
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
+    const btn = document.getElementById('btn-submit-contact') as HTMLButtonElement | null;
+    const successBanner = document.getElementById('contact-success-msg');
+    const errorBanner = document.getElementById('contact-error-msg');
+
+    if (!form || !btn) return;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      if (errorBanner) errorBanner.classList.add('hidden');
+
+      // Client side form submit handling
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
+        form.reset();
+        if (successBanner) successBanner.classList.remove('hidden');
+      }, 600);
+    });
+  });
+</script>
+
+<style>
+  .page-wrapper {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px 24px 60px;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  .breadcrumb-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .breadcrumb-item a {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--color-primary);
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    margin-right: 8px;
+    color: var(--color-hairline);
+  }
+
+  .breadcrumb-item.active span {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-top: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .contact-layout {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+  }
+
+  .contact-info h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 12px;
+    letter-spacing: -0.4px;
+  }
+
+  .lead-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-body);
+    margin-bottom: 32px;
+  }
+
+  .info-block {
+    margin-bottom: 24px;
+  }
+
+  .info-block h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+  }
+
+  .info-block p {
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.5;
+  }
+
+  .email-link {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .quick-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .quick-links a {
+    font-size: 14px;
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Contact Form Styling */
+  .contact-form-container {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-sm);
+    font-family: var(--font-family);
+    font-size: 15px;
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.15);
+  }
+
+  .btn-submit {
+    padding: 14px 24px;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font-family: var(--font-family);
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--rounded-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    align-self: flex-start;
+  }
+
+  .btn-submit:hover {
+    background-color: var(--color-primary-active);
+  }
+
+  .btn-submit:disabled {
+    background-color: var(--color-surface-strong);
+    color: var(--color-muted);
+    cursor: not-allowed;
+  }
+
+  .success-banner {
+    padding: 12px 16px;
+    background-color: #f6ffed;
+    border: 1px solid #b7eb8f;
+    color: #237804;
+    font-size: 14px;
+    border-radius: var(--rounded-sm);
+    margin-top: 8px;
+  }
+
+  .error-banner {
+    padding: 12px 16px;
+    background-color: #fff1f0;
+    border: 1px solid #ffa39e;
+    color: #cf1322;
+    font-size: 14px;
+    border-radius: var(--rounded-sm);
+    margin-top: 8px;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+</style>

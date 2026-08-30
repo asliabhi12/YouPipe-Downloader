@@ -2,41 +2,128 @@
 import Layout from '../layouts/Layout.astro';
 import Downloader from '../components/Downloader.astro';
 import AdPlaceholder from '../components/AdPlaceholder.astro';
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://youpiper.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "YouTube MP3 Downloader",
+          "item": "https://youpiper.com/youtube-mp3"
+        }
+      ]
+    }
+  ]
+};
 ---
 
 <Layout
-  title="Convert YouTube to MP3 Audio — YouPiper"
-  description="Extract high-quality MP3 audio from any YouTube video. Free, no sign-up, no length limits, and no software required."
+  title="YouTube to MP3 – Free Online YouTube MP3 Downloader"
+  description="Convert eligible YouTube video content to MP3 audio when supported. Use the online YouTube MP3 downloader to select an available audio option and save it to your device."
+  canonicalUrl="https://youpiper.com/youtube-mp3"
+  ogTitle="YouTube to MP3 – Free Online YouTube MP3 Downloader"
+  ogDescription="Convert eligible YouTube video content to MP3 audio when supported. Use the online YouTube MP3 downloader to select an available audio option and save it to your device."
+  twitterTitle="YouTube to MP3 – Free Online YouTube MP3 Downloader"
+  twitterDescription="Convert eligible YouTube video content to MP3 audio when supported. Use the online YouTube MP3 downloader to select an available audio option and save it to your device."
+  jsonLd={breadcrumbJsonLd}
 >
   <div class="page-wrapper">
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><span>YouTube MP3 Downloader</span></li>
+      </ol>
+    </nav>
+
     <section class="downloader-section">
-      <Downloader />
+      <Downloader headingLevel="none" />
     </section>
 
     <AdPlaceholder slotLocation="seo-top" />
 
     <article class="seo-article">
-      <h1>YouTube to MP3 Converter & Audio Extractor</h1>
-      <p>
-        YouPiper turns any YouTube video into an MP3 file. Whether you're saving podcasts, music, or lectures, paste the link, choose the Audio option, and get a clean MP3 back.
+      <h1>YouTube Video Download MP3</h1>
+      <p class="lead-text">
+        Extract clean audio tracks using our online <strong>youtube mp3 downloader</strong>. Turn eligible YouTube videos into standalone MP3 audio files for music, podcasts, lectures, and offline listening.
       </p>
 
-      <h2>Why Convert With YouPiper?</h2>
+      <h2>What is MP3 & When is Audio Extraction Useful?</h2>
+      <p>
+        MP3 (MPEG-1 Audio Layer III) is the standard digital audio format compatible with every smartphone, car stereo, tablet, and media player. Performing a <strong>youtube video download mp3</strong> request is ideal when you only need the audio track—such as listening to long interviews, educational speeches, DJ mixes, or podcasts—without wasting device storage or battery power on video rendering.
+      </p>
+
+      <h2>How YouTube to MP3 Extraction Works</h2>
+      <p>
+        When you use our online <strong>youtube mp3 converter</strong>, YouPiper analyzes the target video URL and isolates the primary audio stream. Rather than downloading heavy video frames, the system extracts the audio track and packages it as an MP3 file. This <strong>youtube audio download</strong> process is significantly faster and uses less bandwidth than downloading full video files. For full video downloads, explore our <a href="/youtube-mp4">YouTube to MP4 downloader</a>.
+      </p>
+
+      <h2>Audio Quality & Technical Capabilities</h2>
+      <p>
+        YouPiper extracts the highest-quality audio stream provided by YouTube for the source video. Audio fidelity depends on the quality of the original upload:
+      </p>
       <ul>
-        <li><strong>High-Quality Output:</strong> Audio is taken from the best stream YouTube provides before being converted to MP3.</li>
-        <li><strong>No Length Limits:</strong> Convert long podcasts, DJ mixes, and full lectures — there's no 20-minute cap.</li>
-        <li><strong>Plays Everywhere:</strong> MP3 works on every phone, car stereo, and music player without conversion.</li>
+        <li><strong>Original Audio Bitrate:</strong> We preserve the source audio stream quality directly from YouTube without artificial upscaling.</li>
+        <li><strong>Compact File Size:</strong> MP3 audio files require a fraction of the storage space needed for 1080p MP4 videos.</li>
+        <li><strong>No Artificial Length Caps:</strong> Process long podcasts, speeches, or music sessions smoothly.</li>
       </ul>
+      <p>
+        To learn more about general downloading capabilities across resolutions, visit our main <a href="/youtube-video-downloader">YouTube video downloader</a> page.
+      </p>
 
       <AdPlaceholder slotLocation="seo-mid" />
 
-      <h2>Steps to Convert YouTube to MP3</h2>
-      <ol>
-        <li>Paste the YouTube video link into the URL field above.</li>
-        <li>Click <strong>Analyze</strong> to load the available formats.</li>
-        <li>Under <strong>Audio</strong>, choose the <strong>MP3</strong> row.</li>
-        <li>Click <strong>Download</strong> and save your audio file.</li>
+      <h2>How to Convert & Download YouTube Audio</h2>
+      <ol class="steps-list">
+        <li><strong>Copy Video URL:</strong> Copy the link of the video you want to process to <strong>youtube to audio</strong>.</li>
+        <li><strong>Paste & Analyze:</strong> Paste the link into the search bar above and click <strong>Analyze video</strong>.</li>
+        <li><strong>Select Audio:</strong> Under the format list, navigate to the Audio section and choose <strong>MP3</strong>.</li>
+        <li><strong>Download Audio:</strong> Click <strong>Download</strong> to save the MP3 file to your device.</li>
       </ol>
+
+      <h2>Mobile Audio Downloads on iPhone & Android</h2>
+      <p>
+        You can perform a <strong>download youtube audio</strong> request directly on mobile browsers. On iOS (iPhone/iPad), Safari saves the MP3 to your Files app, where you can play it offline or transfer it to your music player. On Android, Chrome saves the MP3 directly to your Downloads folder. Desktop users looking for unthrottled local downloads can install our free <a href="/helper">YouPiper Helper</a> companion app.
+      </p>
+
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary class="faq-question"><h3>How do I extract MP3 audio from a YouTube video?</h3></summary>
+          <div class="faq-answer">
+            Paste the YouTube video link above, click Analyze, locate the MP3 row under the Audio section, and click Download.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question"><h3>Can I play downloaded MP3 files on my phone?</h3></summary>
+          <div class="faq-answer">
+            Yes. MP3 is universally supported on iOS, Android, macOS, Windows, and all digital audio players.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question"><h3>Is there a limit on audio file length?</h3></summary>
+          <div class="faq-answer">
+            No, YouPiper processes podcasts, lectures, and audio tracks of varying lengths without arbitrary time limits.
+          </div>
+        </details>
+      </div>
+
+      <section class="legal-notice-box">
+        <p>
+          <strong>Responsible Use Notice:</strong> Only download content when you have the necessary rights or permission to do so, or when downloading is otherwise permitted by the applicable service and law. YouPiper is intended for personal archiving and educational use.
+        </p>
+      </section>
     </article>
   </div>
 </Layout>
@@ -45,30 +132,74 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
   .page-wrapper {
     max-width: 1080px;
     margin: 0 auto;
-    padding: 40px 24px;
+    padding: 24px 24px 40px;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  .breadcrumb-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .breadcrumb-item a {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--color-primary);
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    margin-right: 8px;
+    color: var(--color-hairline);
+  }
+
+  .breadcrumb-item.active span {
+    color: var(--color-ink);
+    font-weight: 600;
   }
 
   .seo-article {
-    max-width: 800px;
+    max-width: 840px;
     margin: 48px auto;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.7;
     color: var(--color-body);
   }
 
+  .lead-text {
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
   .seo-article h1 {
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 700;
     color: var(--color-ink);
     margin-bottom: 16px;
+    letter-spacing: -0.4px;
   }
 
   .seo-article h2 {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 22px;
+    font-weight: 700;
     color: var(--color-ink);
-    margin-top: 32px;
+    margin-top: 36px;
     margin-bottom: 12px;
+    letter-spacing: -0.3px;
   }
 
   .seo-article p {
@@ -81,6 +212,67 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
   }
 
   .seo-article li {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+  }
+
+  .seo-article a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .seo-article a:hover {
+    color: var(--color-primary-active);
+  }
+
+  /* FAQ Styling */
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 24px 0 36px;
+  }
+
+  .faq-item {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-md);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .faq-question {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-ink);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .faq-question h3 {
+    display: inline;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .faq-answer {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.6;
+  }
+
+  .legal-notice-box {
+    margin-top: 40px;
+    padding: 20px 24px;
+    background-color: var(--color-surface-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-sm);
+    font-size: 13px;
+    color: var(--color-muted);
+    line-height: 1.6;
+    text-align: center;
   }
 </style>

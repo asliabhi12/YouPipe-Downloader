@@ -157,7 +157,16 @@ const FRIENDLY_BY_CODE: Record<string, string> = {
   download_failed: 'The download could not be completed.',
   job_not_found: 'That download is no longer available. Please start it again.',
   file_not_found: 'The finished file could not be found. Please try downloading it again.',
-  missing_job_id: 'That download is no longer available. Please start it again.'
+  missing_job_id: 'That download is no longer available. Please start it again.',
+  rate_limited: 'Too many requests right now. Please wait a moment and try again.',
+  too_many_requests: 'Too many requests right now. Please wait a moment and try again.',
+  server_error: 'Something went wrong on our server. Please try again shortly.',
+  service_unavailable: 'The processing service is temporarily unavailable. Please try again shortly.',
+  timeout: 'The request took too long to complete. Please try again.',
+  unsupported_url: "This video isn't supported or cannot be processed right now.",
+  geo_restricted: 'This video is restricted or unavailable in this region.',
+  private_video: 'This video is private or requires authorization to view.',
+  age_restricted: 'This video is age-restricted and cannot be processed.'
 };
 
 export const GENERIC_ANALYZE_FAILURE =
@@ -239,7 +248,21 @@ export async function readBackendError(
   } catch {
     // A body that is not JSON tells us nothing beyond the status code.
   }
-  const message = code ? friendlyMessage(code, fallback) : fallback;
+
+  let statusFallback = fallback;
+  if (!code) {
+    if (res.status === 429) {
+      statusFallback = 'Too many requests right now. Please wait a moment and try again.';
+    } else if (res.status >= 500 && (fallback === GENERIC_ANALYZE_FAILURE || fallback === GENERIC_DOWNLOAD_FAILURE || fallback === 'fallback')) {
+      statusFallback = 'Something went wrong on our server. Please try again shortly.';
+    } else if (res.status === 404 && (fallback === GENERIC_ANALYZE_FAILURE || fallback === GENERIC_DOWNLOAD_FAILURE || fallback === 'fallback')) {
+      statusFallback = 'The requested item could not be found. Please try again.';
+    } else if ((res.status === 401 || res.status === 403) && (fallback === GENERIC_ANALYZE_FAILURE || fallback === GENERIC_DOWNLOAD_FAILURE || fallback === 'fallback')) {
+      statusFallback = 'This video or service is currently restricted. Please try again later.';
+    }
+  }
+
+  const message = code ? friendlyMessage(code, statusFallback) : statusFallback;
   return new BackendError(message, code, detail || `HTTP ${res.status}`, backend);
 }
 

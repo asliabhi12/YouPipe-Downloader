@@ -1,0 +1,209 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://youpiper.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Privacy Policy",
+          "item": "https://youpiper.com/privacy-policy"
+        }
+      ]
+    }
+  ]
+};
+---
+
+<Layout
+  title="YouPiper Privacy Policy"
+  description="Read the YouPiper Privacy Policy to learn how information, server logs, analytics, cookies, and third-party services are handled."
+  canonicalUrl="https://youpiper.com/privacy-policy"
+  ogTitle="YouPiper Privacy Policy"
+  ogDescription="Read the YouPiper Privacy Policy to learn how information, server logs, analytics, cookies, and third-party services are handled."
+  twitterTitle="YouPiper Privacy Policy"
+  twitterDescription="Read the YouPiper Privacy Policy to learn how information, server logs, analytics, cookies, and third-party services are handled."
+  jsonLd={breadcrumbJsonLd}
+>
+  <div class="page-wrapper">
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><span>Privacy Policy</span></li>
+      </ol>
+    </nav>
+
+    <article class="legal-article">
+      <h1>Privacy Policy</h1>
+      <p class="effective-date">Last Updated: August 30, 2026</p>
+
+      <h2>1. Introduction</h2>
+      <p>
+        Welcome to YouPiper ("we," "our," or "us"). We respect your privacy and are committed to protecting personal data. This Privacy Policy explains how information is collected, used, and safeguarded when you visit and use <strong>https://youpiper.com/</strong> and related services.
+      </p>
+
+      <h2>2. Information We Collect</h2>
+      <p>We process data to operate, maintain, and provide our downloading tools effectively. Information collected includes:</p>
+      <ul>
+        <li><strong>Server Log & Technical Data:</strong> When accessing the site, standard HTTP log data may be recorded, including your IP address, browser type, operating system, referring URL, and timestamp.</li>
+        <li><strong>Submitted Video URLs:</strong> Video URLs pasted into the search bar are processed transiently to fetch format streams and deliver media files.</li>
+        <li><strong>Local Storage:</strong> Browser local storage may be used to save user preferences, such as YouPiper Helper connection toggles.</li>
+      </ul>
+
+      <h2>3. Data Retention & Temporary Processing</h2>
+      <p>
+        YouPiper is designed with privacy in mind. Media processing occurs dynamically. Temporary audio and video files created during formatting or stream merging are purged immediately upon download completion. We do not maintain long-term archives of your downloaded media files or search queries.
+      </p>
+
+      <h2>4. Cookies, Analytics & Third-Party Services</h2>
+      <p>
+        We may use Google Analytics (GA4) or similar privacy-conscious performance analytics to understand traffic patterns and optimize site performance. Analytics providers collect aggregated, anonymized metrics such as page views and session duration without identifying individual users. You may opt out of tracking by using browser privacy extensions or disabling cookies in your browser settings.
+      </p>
+
+      <h2>5. Advertising</h2>
+      <p>
+        Third-party advertising partners may serve non-personalized or contextual ads on our site to support operations. Advertisers may use cookies or web beacons to collect non-personally identifiable browser information in accordance with their respective privacy policies.
+      </p>
+
+      <h2>6. External Links & YouTube Services</h2>
+      <p>
+        YouPiper interacts with public media URLs. Our website contains links to external sites. We are not responsible for the privacy practices, content, or terms of third-party platforms. By processing YouTube links, users remain subject to applicable platform terms.
+      </p>
+
+      <h2>7. Security</h2>
+      <p>
+        We implement administrative and technical security measures—including SSL/TLS encryption across all site routes—to prevent unauthorized access, disclosure, or alteration of technical logs.
+      </p>
+
+      <h2>8. Children's Privacy</h2>
+      <p>
+        YouPiper does not knowingly collect or solicit personal information from children under the age of 13. If you believe a child has provided us with personal information, please contact us immediately so we can remove it.
+      </p>
+
+      <h2>9. Changes to This Privacy Policy</h2>
+      <p>
+        We reserve the right to update this Privacy Policy at any time. Any changes will be posted on this page with an updated revision date.
+      </p>
+
+      <h2>10. Contact Us</h2>
+      <p>
+        If you have questions, concerns, or requests regarding this Privacy Policy, please reach out via our <a href="/contact">Contact Page</a> or email us at <code>support@youpiper.com</code>.
+      </p>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .page-wrapper {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 24px 24px 60px;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  .breadcrumb-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .breadcrumb-item a {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--color-primary);
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    margin-right: 8px;
+    color: var(--color-hairline);
+  }
+
+  .breadcrumb-item.active span {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .legal-article {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--color-body);
+  }
+
+  .legal-article h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.4px;
+  }
+
+  .effective-date {
+    font-size: 13px;
+    color: var(--color-muted);
+    margin-bottom: 32px;
+  }
+
+  .legal-article h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-top: 32px;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .legal-article p {
+    margin-bottom: 16px;
+  }
+
+  .legal-article ul {
+    margin-bottom: 24px;
+    padding-left: 24px;
+  }
+
+  .legal-article li {
+    margin-bottom: 8px;
+  }
+
+  .legal-article code {
+    background-color: var(--color-surface-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--color-ink);
+  }
+
+  .legal-article a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .legal-article a:hover {
+    color: var(--color-primary-active);
+  }
+</style>

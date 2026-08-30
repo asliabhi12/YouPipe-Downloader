@@ -1,0 +1,131 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Page Not Found — YouPiper"
+  description="The page you are looking for does not exist or has been moved."
+  robots="noindex, follow"
+>
+  <div class="error-page-wrapper">
+    <div class="error-card">
+      <div class="error-code">404</div>
+      <h1 class="error-title">Page Not Found</h1>
+      <p class="error-desc">
+        Sorry, the page you were looking for doesn't exist, was removed, or had its address changed.
+      </p>
+
+      <div class="helpful-actions">
+        <a href="/" class="btn-primary-home">← Go to Homepage</a>
+      </div>
+
+      <div class="quick-navigation">
+        <h3>Popular Tools & Pages</h3>
+        <ul class="nav-grid">
+          <li><a href="/youtube-video-downloader">YouTube Video Downloader</a></li>
+          <li><a href="/youtube-mp4">YouTube to MP4 Downloader</a></li>
+          <li><a href="/youtube-mp3">YouTube to MP3 Converter</a></li>
+          <li><a href="/helper">YouPiper Helper & Guide</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .error-page-wrapper {
+    max-width: 680px;
+    margin: 60px auto;
+    padding: 0 24px;
+  }
+
+  .error-card {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-lg);
+    padding: 48px 36px;
+    box-shadow: var(--shadow-card);
+    text-align: center;
+  }
+
+  .error-code {
+    font-size: 72px;
+    font-weight: 800;
+    color: var(--color-primary);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .error-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 12px;
+    letter-spacing: -0.4px;
+  }
+
+  .error-desc {
+    font-size: 16px;
+    color: var(--color-muted);
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .helpful-actions {
+    margin-bottom: 40px;
+  }
+
+  .btn-primary-home {
+    display: inline-block;
+    padding: 12px 28px;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: var(--rounded-full);
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-primary-home:hover {
+    background-color: var(--color-primary-active);
+  }
+
+  .quick-navigation {
+    border-top: 1px solid var(--color-hairline-soft);
+    padding-top: 28px;
+  }
+
+  .quick-navigation h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 16px;
+  }
+
+  .nav-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 0;
+  }
+
+  .nav-grid a {
+    display: block;
+    padding: 10px 14px;
+    background-color: var(--color-surface-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .nav-grid a:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+</style>

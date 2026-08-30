@@ -585,6 +585,33 @@ test('a failed job error string is never shown to the user verbatim', () => {
   );
 });
 
+test('HTTP status codes (429, 500, 404, 403) yield friendly user sentences', async () => {
+  const err429 = await readBackendError(new Response('{}', { status: 429 }), 'online', 'fallback');
+  assert.equal(err429.message, 'Too many requests right now. Please wait a moment and try again.');
+
+  const err500 = await readBackendError(new Response('{}', { status: 500 }), 'online', 'fallback');
+  assert.equal(err500.message, 'Something went wrong on our server. Please try again shortly.');
+
+  const err404 = await readBackendError(new Response('{}', { status: 404 }), 'online', 'fallback');
+  assert.equal(err404.message, 'The requested item could not be found. Please try again.');
+
+  const err403 = await readBackendError(new Response('{}', { status: 403 }), 'online', 'fallback');
+  assert.equal(err403.message, 'This video or service is currently restricted. Please try again later.');
+});
+
+test('Restricted video error codes map to safe actionable messages', async () => {
+  const cases: Array<[string, string]> = [
+    ['unsupported_url', "This video isn't supported or cannot be processed right now."],
+    ['geo_restricted', 'This video is restricted or unavailable in this region.'],
+    ['private_video', 'This video is private or requires authorization to view.'],
+    ['age_restricted', 'This video is age-restricted and cannot be processed.']
+  ];
+  for (const [code, expected] of cases) {
+    const err = await readBackendError(json({ error: code }, 400), 'online', 'fallback');
+    assert.equal(err.message, expected);
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Helper ON/OFF Control Tests
 // ---------------------------------------------------------------------------

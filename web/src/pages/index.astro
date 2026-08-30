@@ -2,122 +2,182 @@
 import Layout from '../layouts/Layout.astro';
 import Downloader from '../components/Downloader.astro';
 import AdPlaceholder from '../components/AdPlaceholder.astro';
+
+const homepageJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "YouPiper",
+      "url": "https://youpiper.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "name": "YouPiper YouTube Video Downloader",
+      "url": "https://youpiper.com/",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "Download YouTube videos online in MP4, HD and 4K formats with our fast, simple YouTube video downloader. Free to use and easy on any device."
+    }
+  ]
+};
 ---
 
 <Layout
-  title="YouPiper — Free YouTube Video Downloader"
-  description="Download YouTube videos and audio in 1080p, 720p, 480p, and 360p MP4 or MP3. Works straight from your browser, and even faster with YouPiper Helper."
+  title="YouTube Video Download – Free Online MP4 Downloader"
+  description="Download YouTube videos online in MP4, HD and 4K formats with our fast, simple YouTube video downloader. Free to use and easy on any device."
+  canonicalUrl="https://youpiper.com/"
+  ogTitle="YouTube Video Download – Free Online MP4 Downloader"
+  ogDescription="Download YouTube videos online in MP4, HD and 4K formats with a fast and simple downloader."
+  twitterTitle="YouTube Video Download – Free Online MP4 Downloader"
+  twitterDescription="Download YouTube videos online in MP4, HD and 4K formats with a fast and simple downloader."
+  ogImage="https://youpiper.com/og-image.png"
+  jsonLd={homepageJsonLd}
 >
   <div class="homepage-wrapper">
     <!-- Hero & Downloader (Above the fold) -->
     <section class="downloader-section">
-      <Downloader />
+      <Downloader
+        title="YouTube Video Download"
+        tagline="Download YouTube videos online in MP4, HD and 4K quality with a fast, simple and easy-to-use video downloader."
+        headingLevel="h1"
+      />
     </section>
 
     <!-- Top Advertisement Placeholder -->
     <AdPlaceholder slotLocation="top-banner" />
 
-    <!-- How It Works Section -->
-    <section class="content-section">
-      <h2 class="section-heading">How YouPiper Works</h2>
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-number">1</div>
-          <h3 class="step-title">Paste Video URL</h3>
-          <p class="step-desc">Copy any YouTube link and paste it into the downloader field above.</p>
-        </div>
-        <div class="step-card">
-          <div class="step-number">2</div>
-          <h3 class="step-title">Analyze Formats</h3>
-          <p class="step-desc">Click analyze to see every quality the video offers — 1080p, 720p, 480p, 360p, and MP3.</p>
-        </div>
-        <div class="step-card">
-          <div class="step-number">3</div>
-          <h3 class="step-title">Pick Your Quality</h3>
-          <p class="step-desc">Choose a video resolution, or grab audio only as an MP3.</p>
-        </div>
-        <div class="step-card">
-          <div class="step-number">4</div>
-          <h3 class="step-title">Download</h3>
-          <p class="step-desc">Your file arrives through your browser. With YouPiper Helper installed, it lands in your Downloads folder instead — no waiting in line.</p>
-        </div>
-      </div>
-    </section>
+    <!-- Long-form Helpful SEO Content Section (800-1200 words) -->
+    <article class="seo-article">
+      <section class="seo-block">
+        <h2>YouTube Video Download Online</h2>
+        <p>
+          Finding a fast, reliable web tool to perform a <strong>youtube video download online</strong> allows you to save video content directly through your internet browser without installing bulky third-party software. Whether you need to save tutorials, music videos, educational lectures, or entertainment content for offline viewing during travel, an online downloader provides instant access across all modern devices. By simply copying and pasting a video link into the web interface, the system analyzes available streams and prepares high-quality media files for immediate saving. Online video downloading eliminates compatibility hurdles, complex software configuration, and account registrations, making it the most convenient option for everyday users.
+        </p>
+      </section>
 
-    <!-- Features Section -->
-    <section class="content-section light-bg">
-      <h2 class="section-heading">Why Choose YouPiper?</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🔓</div>
-          <h3 class="feature-title">No Account, No Limits</h3>
-          <p class="feature-desc">
-            No sign-up, no email, no install required. Paste a link and download — nothing is kept after your file is delivered.
-          </p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3 class="feature-title">Faster With Helper</h3>
-          <p class="feature-desc">
-            Install YouPiper Helper once and downloads run at your own connection speed, straight to your computer, with no server queue.
-          </p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🎬</div>
-          <h3 class="feature-title">Real MP4 & MP3 Files</h3>
-          <p class="feature-desc">
-            Video comes out as a genuine MP4 up to 1080p with audio properly merged in. Audio-only downloads come out as MP3.
-          </p>
-        </div>
-      </div>
-    </section>
+      <section class="seo-block">
+        <h2>YouTube Video Download in MP4</h2>
+        <p>
+          Choosing a <strong>youtube video download mp4</strong> format guarantees that your saved video plays seamlessly across almost any platform, including Windows PCs, macOS, iOS, Android, smart TVs, and media players. MP4 (MPEG-4 Part 14) is the global standard container for digital video because it delivers an exceptional balance of sharp visual quality and compact file size. When you process a request to convert a <strong>youtube video download into mp4</strong>, YouPiper automatically merges separate video and audio streams into a single, ready-to-play file. If you prefer an audio-only <strong>youtube video download mp3</strong> track for podcasts or music playlists, you can extract audio files using our dedicated <a href="/youtube-mp3">YouTube MP3 converter</a>. For full video downloads, our <a href="/youtube-mp4">YouTube MP4 downloader</a> handles high-speed <strong>youtube video download mp4 convert</strong> tasks effortlessly.
+        </p>
+      </section>
+
+      <section class="seo-block">
+        <h2>YouTube Video Download in HD and 1080p</h2>
+        <p>
+          High-definition media provides crisp clarity, vibrant colors, and sharp details, making <strong>youtube video download hd</strong> options essential for widescreen displays and professional viewing. YouPiper supports high-resolution downloads up to <strong>youtube video download 1080p</strong> Full HD quality, as well as 720p HD, 480p, and standard 360p options. Because YouTube splits high-definition video and high-fidelity audio into separate streams during playback, standard download methods often yield video files without sound. YouPiper resolves this by fetching both streams and stitching them together on-the-fly, producing a full HD MP4 file with clear stereo audio. Resolution options depend on the maximum quality provided by the creator in the original source video upload. To learn more about high-definition options, visit our dedicated <a href="/youtube-video-downloader">YouTube HD downloader</a> page.
+        </p>
+      </section>
+
+      <section class="seo-block">
+        <h2>YouTube Video Download in 4K</h2>
+        <p>
+          For modern 4K monitors, Ultra HD televisions, and high-end displays, opting for a <strong>youtube video download 4k</strong> resolution preserves four times the visual detail of standard 1080p HD. 4K video downloads capture subtle textures, intense color depths, and extreme clarity for cinematic content, nature documentaries, and high-framerate media. When source videos are uploaded in 2160p resolution, YouPiper detects these Ultra HD streams and allows you to perform a <strong>youtube video download 4k free</strong> of charge. 4K availability always depends on the source video's original resolution and supported processing on your playback device.
+        </p>
+      </section>
+
+      <section class="seo-block">
+        <h2>Free YouTube Video Download</h2>
+        <p>
+          Everyone should have access to a straightforward, <strong>free youtube video download</strong> service without encountering hidden paywalls, intrusive subscription prompts, or artificial download caps. YouPiper is committed to providing a completely <strong>youtube video download free</strong> experience where every core feature—including HD downloads, MP4 conversions, and MP3 audio extraction—is fully accessible without payment or user registration. We do not restrict file sizes or force users to sign up for premium tiers. For power users seeking desktop-speed performance without server queues, we also offer the optional <a href="/helper">YouPiper Helper</a> companion app at zero cost.
+        </p>
+      </section>
+
+      <section class="seo-block">
+        <h2>Download YouTube Videos on Mobile</h2>
+        <p>
+          In today's mobile-first world, performing a video download on smartphone devices like iPhones, iPads, and Android phones is essential. You do not need to search for a dedicated <strong>youtube video download app</strong> or install third-party application packages. Web-based downloading works directly within your mobile browser, such as Safari on iOS or Chrome on Android. When completing a <strong>youtube video download iphone</strong> request, Safari prompts you to save the file straight to your Files app, from where you can easily save the video directly to your camera roll or save your <strong>youtube video download in gallery</strong> storage. Avoiding unnecessary mobile app downloads keeps your phone secure and frees up valuable storage space.
+        </p>
+      </section>
+
+      <section class="seo-block">
+        <h2>YouTube Video Download Without Watermark</h2>
+        <p>
+          Users frequently search for a <strong>youtube video download without watermark</strong> tool to ensure clean media playback. It is important to understand how watermarks work: YouPiper processes and delivers the exact media stream provided by the creator. Downloading a video through YouPiper does not insert any new watermarks, logos, or branding onto your media. However, if the original content creator embedded a watermark, logo, or channel overlay into the raw video file before uploading it to YouTube, downloading the video will not erase that embedded graphic. To obtain completely watermark-free media, always download or license original source files directly from the content owner when you hold authorization.
+        </p>
+      </section>
+
+      <section class="seo-block">
+        <h2>How to Download a YouTube Video</h2>
+        <p>
+          Saving online videos with YouPiper is fast and intuitive. Follow these simple steps to complete your download:
+        </p>
+        <ol class="seo-steps">
+          <li><strong>Copy the Video Link:</strong> Open YouTube in your app or browser, navigate to the video you are authorized to download, and copy the full <strong>youtube video download link</strong> from your browser address bar or share menu.</li>
+          <li><strong>Paste the URL:</strong> Return to the YouPiper homepage and paste the link into the URL input field located at the top of the page.</li>
+          <li><strong>Analyze the Video:</strong> Click the <strong>Analyze video</strong> button. YouPiper inspects the URL and retrieves all available video resolutions and audio formats.</li>
+          <li><strong>Choose Your Format:</strong> Review the format list, which displays available resolutions (1080p, 720p, 480p, 360p MP4) and MP3 audio options.</li>
+          <li><strong>Start Download:</strong> Click the <strong>Download</strong> button next to your desired quality. YouPiper processes the file and delivers it directly to your browser's Downloads folder.</li>
+        </ol>
+      </section>
+
+      <section class="seo-block">
+        <h2>Why Use an Online YouTube Video Downloader?</h2>
+        <p>
+          Using a browser-based online downloader offers major advantages over heavy desktop software and browser extensions. Web tools require zero installation, operating safely inside your browser's isolated sandbox environment. They work identically across macOS, Windows, Linux, iOS, and Android without platform compatibility conflicts. Furthermore, online tools protect your privacy because no account creation or personal data submission is required. With YouPiper, you enjoy instant media access while maintaining complete control over your local device storage.
+        </p>
+      </section>
+
+      <section class="seo-block">
+        <h2>A Simple YouTube Downloader</h2>
+        <p>
+          At YouPiper, our goal is to deliver a minimal, lightning-fast, and effortless video downloading experience. By focusing on clean interface design, accurate format detection, and transparent downloading options, we eliminate clutter and unnecessary steps. Whether you need a high-definition 1080p MP4 file for offline presentation or an MP3 audio track for your music library, YouPiper provides a smooth, reliable solution every time.
+        </p>
+      </section>
+    </article>
 
     <!-- Mid Content Advertisement Placeholder -->
     <AdPlaceholder slotLocation="mid-banner" />
 
     <!-- FAQ Section -->
-    <section class="content-section">
+    <section class="content-section" id="faq">
       <h2 class="section-heading">Frequently Asked Questions</h2>
       <div class="faq-list">
         <details class="faq-item" open>
-          <summary class="faq-question">How does YouPiper work?</summary>
+          <summary class="faq-question"><h3>Can I download YouTube videos online?</h3></summary>
           <div class="faq-answer">
-            Paste a YouTube link and press Analyze. YouPiper reads the video's available qualities and shows them as a list. Pick one, press Download, and YouPiper fetches the video, merges the audio into it, and hands you the finished file.
+            Yes. YouPiper allows you to download YouTube videos directly online in your web browser without installing any software or registering an account.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">Do I need to install anything?</summary>
+          <summary class="faq-question"><h3>Can I download YouTube videos as MP4?</h3></summary>
           <div class="faq-answer">
-            No. YouPiper works entirely in your browser with nothing installed — that is the default for everyone. YouPiper Helper is an optional add-on that makes downloads faster, but you never need it to download a video.
+            Yes. YouPiper converts and saves YouTube videos in the widely supported MP4 format with audio merged in for universal compatibility.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">What is YouPiper Helper?</summary>
+          <summary class="faq-question"><h3>Can I download YouTube videos in HD or 4K?</h3></summary>
           <div class="faq-answer">
-            YouPiper Helper is a small free companion you install once on your computer. When it's running, this site hands your download to it instead of to our servers, so the video downloads at your own connection speed and saves straight to your Downloads folder — no queue, no waiting behind other people. <a href="/helper">Learn more about YouPiper Helper</a>.
+            Yes. YouPiper supports high-definition downloads in 1080p Full HD and 720p HD, as well as 4K Ultra HD downloads depending on the quality of the original source video uploaded by the creator.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">Where do my downloads go?</summary>
+          <summary class="faq-question"><h3>Can I use the YouTube video downloader on my phone?</h3></summary>
           <div class="faq-answer">
-            Without the Helper, the file is delivered through your browser and lands wherever your browser normally saves downloads. With YouPiper Helper installed, it's saved straight into your Downloads folder automatically.
+            Yes. YouPiper works directly in mobile browsers on iOS (iPhone/iPad) and Android, allowing you to download videos to your device without installing a separate mobile application.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">What qualities and formats are available?</summary>
+          <summary class="faq-question"><h3>Is the YouTube video downloader free?</h3></summary>
           <div class="faq-answer">
-            Video is available in 1080p, 720p, 480p, and 360p as MP4 files, depending on what the original upload offers. Audio-only downloads are delivered as MP3.
+            Yes. YouPiper is 100% free to use online with no hidden fees, paid subscriptions, or required account registration.
           </div>
         </details>
 
         <details class="faq-item">
-          <summary class="faq-question">Does YouPiper Helper work on macOS and Windows?</summary>
+          <summary class="faq-question"><h3>Do I need to install anything?</h3></summary>
           <div class="faq-answer">
-            Yes — YouPiper Helper runs on macOS, Windows, and Linux. The website itself works on any modern browser, including phones and tablets.
+            No. YouPiper works entirely in your browser with nothing installed. YouPiper Helper is an optional add-on that makes downloads faster, but you never need it to download a video. <a href="/helper">Learn more about YouPiper Helper</a>.
           </div>
         </details>
       </div>
@@ -126,7 +186,7 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     <!-- Legal & Responsible Use Notice -->
     <section class="legal-notice-box">
       <p>
-        <strong>Legal & Responsible Use Notice:</strong> YouPiper is designed for personal archiving and educational purposes. Users are expected to respect copyright law and only download media they own or have explicit permission from the copyright holder to download.
+        <strong>Responsible Use Notice:</strong> Only download videos when you have the necessary rights or permission to do so, or when downloading is otherwise permitted by the applicable service and law. YouPiper is intended for personal archiving and educational use.
       </p>
     </section>
   </div>
@@ -147,13 +207,6 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     margin: 64px 0;
   }
 
-  .content-section.light-bg {
-    background-color: var(--color-surface-soft);
-    padding: 48px 32px;
-    border-radius: var(--rounded-lg);
-    border: 1px solid var(--color-hairline-soft);
-  }
-
   .section-heading {
     font-size: 24px;
     font-weight: 700;
@@ -163,82 +216,50 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     letter-spacing: -0.4px;
   }
 
-  /* Steps Grid */
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 24px;
+  /* SEO Content Styling */
+  .seo-article {
+    margin: 48px 0;
+    line-height: 1.7;
+    color: var(--color-body);
   }
 
-  .step-card {
-    background-color: var(--color-canvas);
-    border: 1px solid var(--color-hairline);
-    border-radius: var(--rounded-md);
-    padding: 24px;
-    box-shadow: var(--shadow-card);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+  .seo-block {
+    margin-bottom: 36px;
   }
 
-  .step-number {
-    width: 36px;
-    height: 36px;
-    background-color: var(--color-primary);
-    color: #ffffff;
-    font-size: 16px;
+  .seo-article h2 {
+    font-size: 22px;
     font-weight: 700;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
-
-  .step-title {
-    font-size: 16px;
-    font-weight: 600;
     color: var(--color-ink);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
   }
 
-  .step-desc {
-    font-size: 14px;
-    color: var(--color-muted);
-    line-height: 1.5;
+  .seo-article p {
+    font-size: 15px;
+    margin-bottom: 12px;
+    color: var(--color-body);
   }
 
-  /* Features Grid */
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 32px;
-  }
-
-  .feature-card {
-    background-color: var(--color-canvas);
-    padding: 32px;
-    border-radius: var(--rounded-md);
-    border: 1px solid var(--color-hairline);
-    box-shadow: var(--shadow-card);
-  }
-
-  .feature-icon {
-    font-size: 32px;
-    margin-bottom: 16px;
-  }
-
-  .feature-title {
-    font-size: 18px;
+  .seo-article a {
+    color: var(--color-primary);
     font-weight: 600;
-    color: var(--color-ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .seo-article a:hover {
+    color: var(--color-primary-active);
+  }
+
+  .seo-steps {
+    margin: 16px 0 24px 24px;
+    font-size: 15px;
+  }
+
+  .seo-steps li {
     margin-bottom: 10px;
-  }
-
-  .feature-desc {
-    font-size: 14px;
-    color: var(--color-muted);
-    line-height: 1.5;
+    padding-left: 6px;
   }
 
   /* FAQ List */
@@ -264,6 +285,13 @@ import AdPlaceholder from '../components/AdPlaceholder.astro';
     color: var(--color-ink);
     outline: none;
     cursor: pointer;
+  }
+
+  .faq-question h3 {
+    display: inline;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-ink);
   }
 
   .faq-answer {

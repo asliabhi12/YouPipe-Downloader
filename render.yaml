@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: youpiper-api
+    env: docker
+    dockerfilePath: ./server/Dockerfile
+    context: ./server
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: MAX_CONCURRENT
+        value: 2
+      - key: YTDLP_PLAYER_CLIENT
+        value: web_embedded

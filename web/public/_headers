@@ -1,0 +1,22 @@
+# Global security & performance headers for Cloudflare Pages
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Cache control for immutable Astro assets
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache control for installer downloads
+/downloads/*
+  Cache-Control: public, max-age=604800
+
+# Cache control for static media & favicon assets
+/*.png
+  Cache-Control: public, max-age=604800
+/*.svg
+  Cache-Control: public, max-age=604800
+/*.ico
+  Cache-Control: public, max-age=604800

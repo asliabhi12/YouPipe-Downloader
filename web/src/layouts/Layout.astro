@@ -3,29 +3,72 @@ interface Props {
   title?: string;
   description?: string;
   canonicalUrl?: string;
+  robots?: string;
+  ogType?: string;
+  ogTitle?: string;
+  ogDescription?: string;
   ogImage?: string;
+  ogSiteName?: string;
+  ogLocale?: string;
+  twitterCard?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  jsonLd?: any;
 }
 
+const siteUrl = Astro.site ? Astro.site.origin : 'https://youpiper.com';
+const currentPath = Astro.url.pathname;
+const defaultCanonical = `${siteUrl}${currentPath === '/' ? '/' : currentPath}`;
+
 const {
-  title = "YouPiper — Free YouTube Video Downloader & MP3 Converter",
-  description = "Fast, free YouTube video downloader. Save 1080p, 720p, 480p, and 360p MP4 video or MP3 audio. Works right in your browser, and even faster with YouPiper Helper.",
-  canonicalUrl = Astro.url.href,
-  ogImage = "https://youpiper.com/og-image.png"
+  title = "YouTube Video Download – Free Online MP4 Downloader",
+  description = "Download YouTube videos online in MP4, HD and 4K formats with our fast, simple YouTube video downloader. Free to use and easy on any device.",
+  canonicalUrl,
+  robots = "index, follow",
+  ogType = "website",
+  ogTitle,
+  ogDescription,
+  ogImage,
+  ogSiteName = "YouPiper",
+  ogLocale = "en_US",
+  twitterCard = "summary_large_image",
+  twitterTitle,
+  twitterDescription,
+  twitterImage,
+  jsonLd
 } = Astro.props;
 
-const jsonLd = {
+const computedCanonicalUrl = canonicalUrl || defaultCanonical;
+const computedOgTitle = ogTitle || title;
+const computedOgDescription = ogDescription || description;
+const computedOgImage = ogImage || `${siteUrl}/og-image.png`;
+const computedTwitterTitle = twitterTitle || computedOgTitle;
+const computedTwitterDescription = twitterDescription || computedOgDescription;
+const computedTwitterImage = twitterImage || computedOgImage;
+
+const defaultJsonLd = jsonLd || {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "YouPiper",
-  "url": "https://youpiper.com",
-  "operatingSystem": "macOS, Windows, Linux",
-  "applicationCategory": "MultimediaApplication",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "description": description
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": ogSiteName,
+      "url": `${siteUrl}/`
+    },
+    {
+      "@type": "WebApplication",
+      "name": `${ogSiteName} YouTube Video Downloader`,
+      "url": `${siteUrl}/`,
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": description
+    }
+  ]
 };
 ---
 
@@ -36,28 +79,39 @@ const jsonLd = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  <link rel="canonical" href={canonicalUrl} />
+  <link rel="canonical" href={computedCanonicalUrl} />
+  <meta name="robots" content={robots} />
 
   <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content={canonicalUrl} />
-  <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
-  <meta property="og:image" content={ogImage} />
+  <meta property="og:type" content={ogType} />
+  <meta property="og:url" content={computedCanonicalUrl} />
+  <meta property="og:title" content={computedOgTitle} />
+  <meta property="og:description" content={computedOgDescription} />
+  <meta property="og:image" content={computedOgImage} />
+  <meta property="og:site_name" content={ogSiteName} />
+  <meta property="og:locale" content={ogLocale} />
 
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:url" content={canonicalUrl} />
-  <meta name="twitter:title" content={title} />
-  <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content={ogImage} />
+  <meta name="twitter:card" content={twitterCard} />
+  <meta name="twitter:url" content={computedCanonicalUrl} />
+  <meta name="twitter:title" content={computedTwitterTitle} />
+  <meta name="twitter:description" content={computedTwitterDescription} />
+  <meta name="twitter:image" content={computedTwitterImage} />
+
+  <!-- Favicons & Web Manifest -->
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="YouPiper" />
+  <link rel="manifest" href="/site.webmanifest" />
 
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(defaultJsonLd)} />
 </head>
 <body>
   <!-- Header / Navigation -->
@@ -105,9 +159,18 @@ const jsonLd = {
           </ul>
         </div>
         <div class="footer-col">
+          <h4 class="footer-title">Company & Trust</h4>
+          <ul class="footer-links">
+            <li><a href="/about">About Us</a></li>
+            <li><a href="/contact">Contact Support</a></li>
+            <li><a href="/privacy-policy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms & Conditions</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
           <h4 class="footer-title">Legal & Usage</h4>
           <p class="footer-legal">
-            YouPiper is intended for personal backup and educational use. Users are responsible for complying with content owners' permissions and applicable copyright laws.
+            YouPiper is intended for personal archiving and educational use. Users are responsible for complying with content owners' permissions and applicable copyright laws.
           </p>
         </div>
       </div>
@@ -259,8 +322,8 @@ const jsonLd = {
 
   .footer-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 2fr;
-    gap: 48px;
+    grid-template-columns: 2fr 1fr 1fr 2fr;
+    gap: 36px;
     margin-bottom: 48px;
   }
 

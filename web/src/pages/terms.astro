@@ -1,0 +1,210 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://youpiper.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Terms & Conditions",
+          "item": "https://youpiper.com/terms"
+        }
+      ]
+    }
+  ]
+};
+---
+
+<Layout
+  title="YouPiper Terms & Conditions"
+  description="Read the Terms & Conditions for using YouPiper's free YouTube video downloading and conversion tools."
+  canonicalUrl="https://youpiper.com/terms"
+  ogTitle="YouPiper Terms & Conditions"
+  ogDescription="Read the Terms & Conditions for using YouPiper's free YouTube video downloading and conversion tools."
+  twitterTitle="YouPiper Terms & Conditions"
+  twitterDescription="Read the Terms & Conditions for using YouPiper's free YouTube video downloading and conversion tools."
+  jsonLd={breadcrumbJsonLd}
+>
+  <div class="page-wrapper">
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><span>Terms & Conditions</span></li>
+      </ol>
+    </nav>
+
+    <article class="legal-article">
+      <h1>Terms & Conditions</h1>
+      <p class="effective-date">Last Updated: August 30, 2026</p>
+
+      <h2>1. Acceptance of Terms</h2>
+      <p>
+        By accessing or using <strong>https://youpiper.com/</strong> ("the Site"), you agree to be bound by these Terms & Conditions ("Terms"). If you do not agree to all terms, please do not use our website or services.
+      </p>
+
+      <h2>2. Description of Service</h2>
+      <p>
+        YouPiper provides online tools that enable users to analyze public video links and save media streams into downloadable formats such as MP4 and MP3 for personal archiving and educational use.
+      </p>
+
+      <h2>3. Acceptable Use & User Responsibility</h2>
+      <p>
+        You represent and warrant that your use of YouPiper complies with all applicable laws and regulations. You are solely responsible for ensuring that you have the legal right, authorization, or permission from the copyright owner to download any media content accessed through the site.
+      </p>
+
+      <h2>4. Prohibited Use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Use the service to infringe upon the intellectual property or copyrights of third parties.</li>
+        <li>Automate queries or attempt to overload or disrupt our infrastructure.</li>
+        <li>Bypass technical security measures or reverse-engineer site systems.</li>
+        <li>Use the tool for commercial redistribution without explicit rights from content owners.</li>
+      </ul>
+
+      <h2>5. Service Availability & Modifications</h2>
+      <p>
+        We strive to maintain continuous uptime but do not guarantee uninterrupted access. We reserve the right to modify, suspend, or discontinue any feature or service at any time without notice.
+      </p>
+
+      <h2>6. Disclaimer of Warranties</h2>
+      <p>
+        The Site and its tools are provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, whether express or implied. We do not guarantee that the tool will meet specific requirements or remain error-free.
+      </p>
+
+      <h2>7. Limitation of Liability</h2>
+      <p>
+        To the maximum extent permitted by law, YouPiper and its operators shall not be liable for any direct, indirect, incidental, or consequential damages arising from your use of or inability to use the service.
+      </p>
+
+      <h2>8. Governing Law</h2>
+      <p>
+        These Terms shall be governed by applicable laws. Any legal disputes shall be resolved in appropriate jurisdictions as specified by site management.
+      </p>
+
+      <h2>9. Changes to Terms</h2>
+      <p>
+        We reserve the right to revise these Terms at any time. Continued use of the Site following updates constitutes acceptance of the modified terms.
+      </p>
+
+      <h2>10. Contact Information</h2>
+      <p>
+        For inquiries regarding these Terms, please reach out via our <a href="/contact">Contact Page</a> or email <code>support@youpiper.com</code>.
+      </p>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .page-wrapper {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 24px 24px 60px;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  .breadcrumb-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .breadcrumb-item a {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .breadcrumb-item a:hover {
+    color: var(--color-primary);
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    margin-right: 8px;
+    color: var(--color-hairline);
+  }
+
+  .breadcrumb-item.active span {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .legal-article {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--color-body);
+  }
+
+  .legal-article h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.4px;
+  }
+
+  .effective-date {
+    font-size: 13px;
+    color: var(--color-muted);
+    margin-bottom: 32px;
+  }
+
+  .legal-article h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-top: 32px;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .legal-article p {
+    margin-bottom: 16px;
+  }
+
+  .legal-article ul {
+    margin-bottom: 24px;
+    padding-left: 24px;
+  }
+
+  .legal-article li {
+    margin-bottom: 8px;
+  }
+
+  .legal-article code {
+    background-color: var(--color-surface-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--color-ink);
+  }
+
+  .legal-article a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .legal-article a:hover {
+    color: var(--color-primary-active);
+  }
+</style>

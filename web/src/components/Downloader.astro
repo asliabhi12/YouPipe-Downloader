@@ -3,13 +3,31 @@ import AgentStatus from './AgentStatus.astro';
 import VideoInfo from './VideoInfo.astro';
 import FormatList from './FormatList.astro';
 import DownloadProgress from './DownloadProgress.astro';
+
+interface Props {
+  title?: string;
+  tagline?: string;
+  headingLevel?: 'h1' | 'h2' | 'none';
+}
+
+const {
+  title = "YouTube Video Download",
+  tagline = "Download YouTube videos online in MP4, HD and 4K quality with a fast, simple and easy-to-use video downloader.",
+  headingLevel = "h1"
+} = Astro.props;
 ---
 
 <div class="downloader-island">
-  <div class="downloader-hero">
-    <h2 class="hero-brand">YouPiper</h2>
-    <p class="hero-tagline">Free YouTube downloads in MP4 or MP3. No sign-up, no software needed.</p>
-  </div>
+  {headingLevel !== 'none' && (
+    <div class="downloader-hero">
+      {headingLevel === 'h1' ? (
+        <h1 class="hero-brand">{title}</h1>
+      ) : (
+        <h2 class="hero-brand">{title}</h2>
+      )}
+      <p class="hero-tagline">{tagline}</p>
+    </div>
+  )}
 
   <!-- Search Input Bar -->
   <form id="downloader-url-form" class="search-bar-pill">
@@ -175,6 +193,13 @@ import DownloadProgress from './DownloadProgress.astro';
       });
     });
 
+    function safeErrorMessage(err: any, fallback: string): string {
+      if (err && typeof err === 'object' && (err.name === 'BackendError' || err.code) && typeof err.message === 'string') {
+        return err.message;
+      }
+      return fallback;
+    }
+
     // Form submission: Analyze
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -196,7 +221,7 @@ import DownloadProgress from './DownloadProgress.astro';
         // The sentence on the error is already written for a person; the code
         // and backend detail stay in the console.
         console.error('[youpiper] analyze failed:', err);
-        showError(err?.message || 'We could not analyze this video. Please check the link and try again.');
+        showError(safeErrorMessage(err, 'We could not analyze this video. Please check the link and try again.'));
       } finally {
         btnAnalyze.removeAttribute('disabled');
         btnAnalyze.innerHTML = '<span class="btn-text">Analyze video</span>';
@@ -308,7 +333,7 @@ import DownloadProgress from './DownloadProgress.astro';
         startPolling(activeJobId, activeBackend);
       } catch (err: any) {
         console.error('[youpiper] starting the download failed:', err);
-        showError(err?.message || 'We could not start that download. Please try again.');
+        showError(safeErrorMessage(err, 'We could not start that download. Please try again.'));
         if (btnElement) {
           btnElement.disabled = false;
           const labelEl = btnElement.querySelector('.btn-text-content');
