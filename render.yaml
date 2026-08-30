@@ -2,8 +2,7 @@ services:
   - type: web
     name: youpiper-api
     env: docker
-    dockerfilePath: ./server/Dockerfile
-    context: ./server
+    dockerfilePath: Dockerfile
     plan: free
     healthCheckPath: /health
     envVars:
@@ -12,4 +11,6 @@ services:
       - key: MAX_CONCURRENT
         value: 2
       - key: YTDLP_PLAYER_CLIENT
-        value: web_embedded
+        value: ""
+      - key: ALLOWED_ORIGINS
+        value: https://youpiper.ytd-web.workers.dev,http://127.0.0.1:4321,http://localhost:4321

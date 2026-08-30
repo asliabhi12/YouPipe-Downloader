@@ -61,7 +61,7 @@ COOKIES_FROM_BROWSER = os.environ.get("YTDLP_COOKIES_FROM_BROWSER", "").strip()
 # unconditionally, would keep working and mask it. The two backends must agree.
 # Set YTDLP_PLAYER_CLIENT to another client to override, or to an empty string
 # to opt out and get stock yt-dlp behavior.
-PLAYER_CLIENT = os.environ.get("YTDLP_PLAYER_CLIENT", "web_embedded").strip()
+PLAYER_CLIENT = os.environ.get("YTDLP_PLAYER_CLIENT", "").strip()
 
 jobs = {}
 jobs_lock = threading.Lock()

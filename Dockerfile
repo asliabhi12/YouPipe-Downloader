@@ -9,12 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy requirements and install Python packages
-COPY requirements.txt .
+# Copy Python requirements and install dependencies
+COPY server/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
-COPY . .
+# Copy server application code
+COPY server/ .
 
 ENV PORT=10000
 ENV PYTHONUNBUFFERED=1

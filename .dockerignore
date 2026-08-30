@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.*
+node_modules
+web/
+local/
+downloads/
+test_downloads/
+scratch/
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv
