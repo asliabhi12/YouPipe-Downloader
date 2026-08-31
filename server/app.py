@@ -110,7 +110,7 @@ def unique_path(directory, filename):
 # yt-dlp helpers
 # --------------------------------------------------------------------------
 def base_ytdlp_args():
-    args = ["yt-dlp", "--no-playlist", "--no-warnings"]
+    args = ["yt-dlp", "--no-playlist", "--no-warnings", "--buffer-size", "16k", "--postprocessor-args", "ffmpeg:-threads 1"]
     if COOKIES_FILE:
         args += ["--cookies", COOKIES_FILE]
     elif COOKIES_FROM_BROWSER:
