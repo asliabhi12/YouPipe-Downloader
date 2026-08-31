@@ -22,7 +22,7 @@ import {
 const LOCAL_AGENT_URL = 'http://127.0.0.1:47821';
 const ONLINE_URL =
   ((import.meta as any).env?.PUBLIC_ONLINE_URL as string | undefined) ??
-  'http://127.0.0.1:5001';
+  'https://youpiper-api.onrender.com';
 
 export {
   HELPER_COPY,
