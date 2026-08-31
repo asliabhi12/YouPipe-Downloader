@@ -62,8 +62,8 @@ COOKIES_FROM_BROWSER = os.environ.get("YTDLP_COOKIES_FROM_BROWSER", "").strip()
 # Set YTDLP_PLAYER_CLIENT to another client to override, or to an empty string
 # to opt out and get stock yt-dlp behavior.
 PLAYER_CLIENT_RAW = (os.environ.get("YTDLP_PLAYER_CLIENT") or "").strip()
-if not PLAYER_CLIENT_RAW or PLAYER_CLIENT_RAW.lower() in ("default", "auto"):
-    PLAYER_CLIENT = "web_embedded"
+if not PLAYER_CLIENT_RAW or PLAYER_CLIENT_RAW.lower() in ("default", "auto", "web_embedded"):
+    PLAYER_CLIENT = "mweb,android"
 elif PLAYER_CLIENT_RAW.lower() in ("none", "off", "disabled"):
     PLAYER_CLIENT = ""
 else:
@@ -421,16 +421,21 @@ def _safe_remove(path):
 
 
 def _sanitize_error(msg):
-    """Sanitize internal paths, commands, and stack traces from API responses."""
+    """Sanitize internal paths, bot challenge text, commands, and stack traces from API responses."""
     if not msg:
         return "An error occurred during media processing"
     s = str(msg)
-    # Remove internal file paths
+    if "Sign in to confirm" in s or "cookies" in s or "bot" in s.lower():
+        return "YouTube is temporarily limiting access to this video. Please try another video or try again later."
+    # Remove internal filesystem paths
     s = re.sub(r"/(?:[a-zA-Z0-9_.-]+/)+[a-zA-Z0-9_.-]+", "[file]", s)
-    if "yt-dlp exited" in s:
+    if "yt-dlp exited" in s or "ERROR: [youtube]" in s:
         parts = s.split(":", 1)
         if len(parts) > 1:
-            s = f"Extraction error: {parts[1].strip()}"
+            clean_part = parts[1].strip()
+            if "Sign in to confirm" in clean_part or "bot" in clean_part.lower():
+                return "YouTube is temporarily limiting access to this video. Please try another video or try again later."
+            s = f"Extraction error: {clean_part}"
         else:
             s = "Extraction failed"
     return s
