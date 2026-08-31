@@ -11,6 +11,6 @@ services:
       - key: MAX_CONCURRENT
         value: 2
       - key: YTDLP_PLAYER_CLIENT
-        value: ""
+        value: web_embedded
       - key: ALLOWED_ORIGINS
         value: https://youpiper.ytd-web.workers.dev,http://127.0.0.1:4321,http://localhost:4321
