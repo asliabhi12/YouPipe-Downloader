@@ -132,7 +132,10 @@ def ytdlp_info(url, timeout=90):
     cmd = base_ytdlp_args(client=PRIMARY_PLAYER_CLIENT, use_pot=True) + ["-j", url]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     if result.returncode == 0:
-        return parse_ytdlp_json(result.stdout), PRIMARY_PLAYER_CLIENT, True
+        try:
+            return parse_ytdlp_json(result.stdout), PRIMARY_PLAYER_CLIENT, True
+        except ValueError as ve:
+            app.logger.warning("Primary analyze JSON parse error: %s", ve)
     
     err1 = last_error(result.stderr)
     app.logger.warning("Primary analyze stderr: %s", result.stderr.strip())
@@ -143,13 +146,16 @@ def ytdlp_info(url, timeout=90):
         cmd_fb = base_ytdlp_args(client=FALLBACK_PLAYER_CLIENT, use_pot=False) + ["-j", url]
         result_fb = subprocess.run(cmd_fb, capture_output=True, text=True, timeout=timeout)
         if result_fb.returncode == 0:
-            app.logger.info("Fallback yt-dlp analyze succeeded with client: %s", FALLBACK_PLAYER_CLIENT)
-            return parse_ytdlp_json(result_fb.stdout), FALLBACK_PLAYER_CLIENT, False
+            try:
+                return parse_ytdlp_json(result_fb.stdout), FALLBACK_PLAYER_CLIENT, False
+            except ValueError as ve:
+                app.logger.warning("Fallback analyze JSON parse error: %s", ve)
         err1 = last_error(result_fb.stderr)
         app.logger.warning("Fallback analyze stderr: %s", result_fb.stderr.strip())
         app.logger.warning("Fallback yt-dlp analyze failed: %s", err1)
         
     raise DownloaderError(err1)
+
 
 
 
