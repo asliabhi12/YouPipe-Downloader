@@ -54,21 +54,20 @@ COOKIES_FROM_BROWSER = os.environ.get("YTDLP_COOKIES_FROM_BROWSER", "").strip()
 # PO Token Provider URL (defaults to local HTTP provider on 4416)
 POT_PROVIDER_URL = os.environ.get("POT_PROVIDER_URL", "http://127.0.0.1:4416").strip()
 
-# Client strategies: Primary (mweb,android) & Fallback (web_embedded,android)
+# Client strategies: Primary (mweb,android with PO token) & Fallback (web_embedded)
 PLAYER_CLIENT_RAW = (os.environ.get("YTDLP_PLAYER_CLIENT") or "").strip()
-if not PLAYER_CLIENT_RAW or PLAYER_CLIENT_RAW.lower() in ("default", "auto", "web_embedded"):
-    PRIMARY_PLAYER_CLIENT = "ios,mweb,web_safari,android"
-    FALLBACK_PLAYER_CLIENT = "web_embedded,android"
-
+if not PLAYER_CLIENT_RAW or PLAYER_CLIENT_RAW.lower() in ("default", "auto", "mweb,android", "ios,mweb,web_safari,android"):
+    PRIMARY_PLAYER_CLIENT = "mweb,android"
+    FALLBACK_PLAYER_CLIENT = "web_embedded"
 elif PLAYER_CLIENT_RAW.lower() in ("none", "off", "disabled"):
     PRIMARY_PLAYER_CLIENT = ""
     FALLBACK_PLAYER_CLIENT = ""
 else:
     PRIMARY_PLAYER_CLIENT = PLAYER_CLIENT_RAW
-    FALLBACK_PLAYER_CLIENT = os.environ.get("YTDLP_FALLBACK_PLAYER_CLIENT", "web_embedded,android").strip()
-
+    FALLBACK_PLAYER_CLIENT = os.environ.get("YTDLP_FALLBACK_PLAYER_CLIENT", "web_embedded").strip()
 
 PLAYER_CLIENT = PRIMARY_PLAYER_CLIENT
+
 
 jobs = {}
 jobs_lock = threading.Lock()
