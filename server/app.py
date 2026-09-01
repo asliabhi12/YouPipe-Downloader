@@ -666,6 +666,7 @@ def get_file(job_id):
 @app.get("/health")
 def health():
     pot_status = "unavailable"
+    pot_log = None
     try:
         import urllib.request
         with urllib.request.urlopen("http://127.0.0.1:4416/ping", timeout=2) as req:
@@ -673,15 +674,25 @@ def health():
                 pot_status = "ok"
     except Exception as e:
         pot_status = f"error: {e}"
+        if os.path.exists("/tmp/pot_provider.log"):
+            try:
+                with open("/tmp/pot_provider.log", "r") as f:
+                    pot_log = f.read().splitlines()[-5:]
+            except Exception:
+                pass
 
-    return jsonify({
+    res = {
         "status": "ok",
         "service": "youpiper-server",
         "pot_provider": pot_status,
         "primary_client": PRIMARY_PLAYER_CLIENT,
         "fallback_client": FALLBACK_PLAYER_CLIENT,
         "max_concurrent": MAX_CONCURRENT,
-    })
+    }
+    if pot_log:
+        res["pot_log"] = pot_log
+    return jsonify(res)
+
 
 
 if __name__ == "__main__":

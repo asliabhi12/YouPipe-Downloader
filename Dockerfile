@@ -10,12 +10,15 @@ RUN git clone https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git repo \
 # Stage 2: Production app container
 FROM python:3.11-slim
 
-# Install system dependencies required by yt-dlp & bgutil PO-token provider runtime
+# Copy Node.js binary and runtime directly from Node stage for exact ABI matching
+COPY --from=bgutil-builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=bgutil-builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+# Install system dependencies required by yt-dlp & FFmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     ca-certificates \
-    nodejs \
     && rm -rf /var/lib/apt-get/lists/*
 
 WORKDIR /app
@@ -23,7 +26,7 @@ WORKDIR /app
 # Copy built bgutil server from builder stage
 COPY --from=bgutil-builder /build/repo/server /app/bgutil-server
 
-# Copy Python requirements and install dependencies (including yt-dlp & bgutil plugin)
+# Copy Python requirements and install dependencies
 COPY server/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -40,5 +43,5 @@ ENV POT_PROVIDER_URL=http://127.0.0.1:4416
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$PORT/health || exit 1
 
-# Run entrypoint script (starts PO-token provider on 4416 and Gunicorn WSGI server)
+# Run entrypoint script
 CMD ["/app/start.sh"]

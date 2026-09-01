@@ -4,7 +4,7 @@ set -e
 # Start the PO Token Provider HTTP server in background if available
 if [ -d "/app/bgutil-server" ]; then
     echo "[youpiper] Starting bgutil PO Token Provider HTTP server on port 4416..."
-    (cd /app/bgutil-server && node build/main.js) &
+    (cd /app/bgutil-server && node build/main.js > /tmp/pot_provider.log 2>&1) &
     
     # Wait briefly for provider server to respond on /ping
     for i in {1..30}; do

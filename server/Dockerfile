@@ -10,12 +10,15 @@ RUN git clone https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git repo \
 # Stage 2: Production app container
 FROM python:3.11-slim
 
-# Install system dependencies required by yt-dlp & bgutil PO-token provider runtime
+# Copy Node.js binary and runtime directly from Node stage for exact ABI matching
+COPY --from=bgutil-builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=bgutil-builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+# Install system dependencies required by yt-dlp & FFmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     ca-certificates \
-    nodejs \
     && rm -rf /var/lib/apt-get/lists/*
 
 WORKDIR /app
