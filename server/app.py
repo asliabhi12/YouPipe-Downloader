@@ -47,27 +47,26 @@ PROGRESS_RE = re.compile(r"^\[download\]\s+(\d+(?:\.\d+)?)%")
 
 # Optional operator-provided identity for sites that require it (e.g. YouTube
 # returns HTTP 403 for unauthenticated media requests). Default: plain default
-# yt-dlp behavior, no extractor hacks. Only used when explicitly configured.
+# Optional operator-provided identity for sites that require it.
 COOKIES_FILE = os.environ.get("YTDLP_COOKIES_FILE", "").strip()
 COOKIES_FROM_BROWSER = os.environ.get("YTDLP_COOKIES_FROM_BROWSER", "").strip()
 
-# Documented yt-dlp YouTube extractor option that provides a credential-free
-# path: `--extractor-args "youtube:player_client=<client>"`. Validated working
-# with `web_embedded` (full quality range) on this yt-dlp version.
-#
-# This defaults ON. Anonymous YouTube media requests 403 without it, so leaving
-# it opt-in meant a bare `python app.py` produced a server that could read
-# metadata but never download — and the Helper, which sets the same option
-# unconditionally, would keep working and mask it. The two backends must agree.
-# Set YTDLP_PLAYER_CLIENT to another client to override, or to an empty string
-# to opt out and get stock yt-dlp behavior.
+# PO Token Provider URL (defaults to local HTTP provider on 4416)
+POT_PROVIDER_URL = os.environ.get("POT_PROVIDER_URL", "http://127.0.0.1:4416").strip()
+
+# Client strategies: Primary (mweb,android) & Fallback (web_embedded,android)
 PLAYER_CLIENT_RAW = (os.environ.get("YTDLP_PLAYER_CLIENT") or "").strip()
-if not PLAYER_CLIENT_RAW or PLAYER_CLIENT_RAW.lower() in ("default", "auto", "web_embedded"):
-    PLAYER_CLIENT = "mweb,android"
+if not PLAYER_CLIENT_RAW or PLAYER_CLIENT_RAW.lower() in ("default", "auto"):
+    PRIMARY_PLAYER_CLIENT = "mweb,android"
+    FALLBACK_PLAYER_CLIENT = "web_embedded,android"
 elif PLAYER_CLIENT_RAW.lower() in ("none", "off", "disabled"):
-    PLAYER_CLIENT = ""
+    PRIMARY_PLAYER_CLIENT = ""
+    FALLBACK_PLAYER_CLIENT = ""
 else:
-    PLAYER_CLIENT = PLAYER_CLIENT_RAW
+    PRIMARY_PLAYER_CLIENT = PLAYER_CLIENT_RAW
+    FALLBACK_PLAYER_CLIENT = os.environ.get("YTDLP_FALLBACK_PLAYER_CLIENT", "web_embedded,android").strip()
+
+PLAYER_CLIENT = PRIMARY_PLAYER_CLIENT
 
 jobs = {}
 jobs_lock = threading.Lock()
@@ -109,28 +108,50 @@ def unique_path(directory, filename):
 # --------------------------------------------------------------------------
 # yt-dlp helpers
 # --------------------------------------------------------------------------
-def base_ytdlp_args():
+def base_ytdlp_args(client=None, use_pot=True):
     args = ["yt-dlp", "--no-playlist", "--no-warnings", "--buffer-size", "16k", "--postprocessor-args", "ffmpeg:-threads 1"]
     if COOKIES_FILE:
         args += ["--cookies", COOKIES_FILE]
     elif COOKIES_FROM_BROWSER:
         args += ["--cookies-from-browser", COOKIES_FROM_BROWSER]
-    if PLAYER_CLIENT:
-        args += ["--extractor-args", f"youtube:player_client={PLAYER_CLIENT}"]
+    
+    target_client = client if client is not None else PRIMARY_PLAYER_CLIENT
+    if target_client:
+        args += ["--extractor-args", f"youtube:player_client={target_client}"]
+    
+    if use_pot and POT_PROVIDER_URL:
+        args += ["--extractor-args", f"youtubepot-bgutilhttp:base_url={POT_PROVIDER_URL}"]
+        
     return args
 
 
 def ytdlp_info(url, timeout=90):
-    cmd = base_ytdlp_args() + ["-j", url]
+    # Primary extraction attempt
+    cmd = base_ytdlp_args(client=PRIMARY_PLAYER_CLIENT, use_pot=True) + ["-j", url]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    if result.returncode != 0:
-        raise DownloaderError(last_error(result.stderr))
-    return parse_ytdlp_json(result.stdout)
+    if result.returncode == 0:
+        return parse_ytdlp_json(result.stdout)
+    
+    err1 = last_error(result.stderr)
+    app.logger.warning("Primary yt-dlp analyze failed: %s. Trying fallback client...", err1)
+    
+    # Fallback extraction attempt
+    if FALLBACK_PLAYER_CLIENT and FALLBACK_PLAYER_CLIENT != PRIMARY_PLAYER_CLIENT:
+        cmd_fb = base_ytdlp_args(client=FALLBACK_PLAYER_CLIENT, use_pot=True) + ["-j", url]
+        result_fb = subprocess.run(cmd_fb, capture_output=True, text=True, timeout=timeout)
+        if result_fb.returncode == 0:
+            app.logger.info("Fallback yt-dlp analyze succeeded with client: %s", FALLBACK_PLAYER_CLIENT)
+            return parse_ytdlp_json(result_fb.stdout)
+        err1 = last_error(result_fb.stderr)
+        app.logger.warning("Fallback yt-dlp analyze failed: %s", err1)
+        
+    raise DownloaderError(err1)
 
 
 def last_error(text):
     lines = [l.strip() for l in text.strip().splitlines() if l.strip()]
     return lines[-1] if lines else "yt-dlp failed"
+
 
 
 def available_heights(info):
