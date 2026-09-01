@@ -57,8 +57,9 @@ POT_PROVIDER_URL = os.environ.get("POT_PROVIDER_URL", "http://127.0.0.1:4416").s
 # Client strategies: Primary (mweb,android with PO token) & Fallback (web_embedded)
 PLAYER_CLIENT_RAW = (os.environ.get("YTDLP_PLAYER_CLIENT") or "").strip()
 if not PLAYER_CLIENT_RAW or PLAYER_CLIENT_RAW.lower() in ("default", "auto", "mweb,android", "ios,mweb,web_safari,android"):
-    PRIMARY_PLAYER_CLIENT = "mweb,android"
-    FALLBACK_PLAYER_CLIENT = "web_embedded"
+    PRIMARY_PLAYER_CLIENT = "mweb,web_embedded,android"
+    FALLBACK_PLAYER_CLIENT = "web_embedded,android"
+
 elif PLAYER_CLIENT_RAW.lower() in ("none", "off", "disabled"):
     PRIMARY_PLAYER_CLIENT = ""
     FALLBACK_PLAYER_CLIENT = ""
