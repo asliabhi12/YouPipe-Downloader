@@ -665,9 +665,21 @@ def get_file(job_id):
 
 @app.get("/health")
 def health():
+    pot_status = "unavailable"
+    try:
+        import urllib.request
+        with urllib.request.urlopen("http://127.0.0.1:4416/ping", timeout=2) as req:
+            if req.getcode() == 200:
+                pot_status = "ok"
+    except Exception as e:
+        pot_status = f"error: {e}"
+
     return jsonify({
         "status": "ok",
         "service": "youpiper-server",
+        "pot_provider": pot_status,
+        "primary_client": PRIMARY_PLAYER_CLIENT,
+        "fallback_client": FALLBACK_PLAYER_CLIENT,
         "max_concurrent": MAX_CONCURRENT,
     })
 
