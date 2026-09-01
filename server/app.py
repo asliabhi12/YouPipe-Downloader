@@ -574,8 +574,9 @@ def analyze():
     if not url:
         return jsonify({"error": "No URL provided"}), 400
     try:
-        info = ytdlp_info(url)
+        info, client_used, pot_used = ytdlp_info(url)
     except DownloaderError as e:
+
         return jsonify({"error": _sanitize_error(str(e))}), 400
     except Exception as e:
         app.logger.error("Analyze error: %s", e, exc_info=True)
