@@ -135,6 +135,7 @@ def ytdlp_info(url, timeout=90):
         return parse_ytdlp_json(result.stdout)
     
     err1 = last_error(result.stderr)
+    app.logger.warning("Primary analyze stderr: %s", result.stderr.strip())
     app.logger.warning("Primary yt-dlp analyze failed: %s. Trying fallback client...", err1)
     
     # Fallback extraction attempt (without PO-Token requirement to allow web_embedded/tv clients)
@@ -145,9 +146,11 @@ def ytdlp_info(url, timeout=90):
             app.logger.info("Fallback yt-dlp analyze succeeded with client: %s", FALLBACK_PLAYER_CLIENT)
             return parse_ytdlp_json(result_fb.stdout)
         err1 = last_error(result_fb.stderr)
+        app.logger.warning("Fallback analyze stderr: %s", result_fb.stderr.strip())
         app.logger.warning("Fallback yt-dlp analyze failed: %s", err1)
         
     raise DownloaderError(err1)
+
 
 
 
@@ -665,8 +668,32 @@ def get_file(job_id):
     return send_file(path, as_attachment=True, download_name=job["filename"])
 
 
+@app.post("/api/debug_extract")
+def debug_extract():
+    data = request.get_json(silent=True) or {}
+    url = (data.get("url") or "").strip()
+    client = (data.get("client") or PRIMARY_PLAYER_CLIENT).strip()
+    use_pot = data.get("use_pot", True)
+    
+    cmd = ["yt-dlp", "-v", "--no-playlist", "--no-warnings", "--buffer-size", "16k"]
+    if client:
+        cmd += ["--extractor-args", f"youtube:player_client={client}"]
+    if use_pot and POT_PROVIDER_URL:
+        cmd += ["--extractor-args", f"youtubepot-bgutilhttp:base_url={POT_PROVIDER_URL}"]
+    cmd += ["-j", url]
+    
+    res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    return jsonify({
+        "cmd": " ".join(cmd),
+        "returncode": res.returncode,
+        "stdout_len": len(res.stdout),
+        "stderr": res.stderr.splitlines()[-20:] if res.stderr else [],
+    })
+
+
 @app.get("/health")
 def health():
+
     pot_status = "unavailable"
     pot_log = None
     try:
