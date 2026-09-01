@@ -128,7 +128,7 @@ def base_ytdlp_args(client=None, use_pot=True):
 
 
 def ytdlp_info(url, timeout=90):
-    # Primary extraction attempt
+    # Primary extraction attempt (with PO-Token Provider)
     cmd = base_ytdlp_args(client=PRIMARY_PLAYER_CLIENT, use_pot=True) + ["-j", url]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     if result.returncode == 0:
@@ -137,9 +137,9 @@ def ytdlp_info(url, timeout=90):
     err1 = last_error(result.stderr)
     app.logger.warning("Primary yt-dlp analyze failed: %s. Trying fallback client...", err1)
     
-    # Fallback extraction attempt
+    # Fallback extraction attempt (without PO-Token requirement to allow web_embedded/tv clients)
     if FALLBACK_PLAYER_CLIENT and FALLBACK_PLAYER_CLIENT != PRIMARY_PLAYER_CLIENT:
-        cmd_fb = base_ytdlp_args(client=FALLBACK_PLAYER_CLIENT, use_pot=True) + ["-j", url]
+        cmd_fb = base_ytdlp_args(client=FALLBACK_PLAYER_CLIENT, use_pot=False) + ["-j", url]
         result_fb = subprocess.run(cmd_fb, capture_output=True, text=True, timeout=timeout)
         if result_fb.returncode == 0:
             app.logger.info("Fallback yt-dlp analyze succeeded with client: %s", FALLBACK_PLAYER_CLIENT)
@@ -148,6 +148,7 @@ def ytdlp_info(url, timeout=90):
         app.logger.warning("Fallback yt-dlp analyze failed: %s", err1)
         
     raise DownloaderError(err1)
+
 
 
 def last_error(text):
