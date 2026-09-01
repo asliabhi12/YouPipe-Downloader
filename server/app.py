@@ -131,7 +131,7 @@ def ytdlp_info(url, timeout=90):
     cmd = base_ytdlp_args(client=PRIMARY_PLAYER_CLIENT, use_pot=True) + ["-j", url]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     if result.returncode == 0:
-        return parse_ytdlp_json(result.stdout)
+        return parse_ytdlp_json(result.stdout), PRIMARY_PLAYER_CLIENT, True
     
     err1 = last_error(result.stderr)
     app.logger.warning("Primary analyze stderr: %s", result.stderr.strip())
@@ -143,12 +143,13 @@ def ytdlp_info(url, timeout=90):
         result_fb = subprocess.run(cmd_fb, capture_output=True, text=True, timeout=timeout)
         if result_fb.returncode == 0:
             app.logger.info("Fallback yt-dlp analyze succeeded with client: %s", FALLBACK_PLAYER_CLIENT)
-            return parse_ytdlp_json(result_fb.stdout)
+            return parse_ytdlp_json(result_fb.stdout), FALLBACK_PLAYER_CLIENT, False
         err1 = last_error(result_fb.stderr)
         app.logger.warning("Fallback analyze stderr: %s", result_fb.stderr.strip())
         app.logger.warning("Fallback yt-dlp analyze failed: %s", err1)
         
     raise DownloaderError(err1)
+
 
 
 
@@ -338,8 +339,10 @@ def _set_meta(job, info):
 
 
 def _perform_download(job):
-    info = ytdlp_info(job["url"])  # also used after download for id/title
+    info, client_used, pot_used = ytdlp_info(job["url"])
     _set_meta(job, info)
+    job["client_used"] = client_used
+    job["pot_used"] = pot_used
 
     if job["format"] == "mp3":
         _download_audio(job, info)
@@ -353,7 +356,7 @@ def _perform_download(job):
         )
 
     out_template = os.path.join(TMP_DIR, f"{job['job_id']}.%(ext)s")
-    cmd = base_ytdlp_args() + ["--newline", "-o", out_template]
+    cmd = base_ytdlp_args(client=job["client_used"], use_pot=job["pot_used"]) + ["--newline", "-o", out_template]
     if fmt.get("acodec", "none") == "none":
         cmd += ["-f", f'{fmt["format_id"]}+bestaudio/best']
     else:
@@ -386,7 +389,7 @@ def _perform_download(job):
 
 def _download_audio(job, info):
     out_template = os.path.join(TMP_DIR, f"{job['job_id']}.%(ext)s")
-    cmd = base_ytdlp_args() + [
+    cmd = base_ytdlp_args(client=job.get("client_used"), use_pot=job.get("pot_used", True)) + [
         "--newline", "-x", "--audio-format", "mp3",
         "-o", out_template, job["url"],
     ]
@@ -411,6 +414,7 @@ def _download_audio(job, info):
 
     verify = verify_audio(chosen)
     _finalize(job, chosen, verify, quality_label="audio")
+
 
 
 def _finalize(job, src_path, verify, quality_label):
